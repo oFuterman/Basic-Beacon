@@ -6,8 +6,8 @@ import { AuthProvider } from "@/contexts/auth";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Simple Monitor",
-  description: "Uptime monitoring for developers",
+  title: "Basic Beacon",
+  description: "Lightweight uptime monitoring tool",
 };
 
 export default function RootLayout({

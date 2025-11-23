@@ -37,7 +37,7 @@ export default function LogsPage() {
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex h-14 items-center gap-8">
               <Link href="/dashboard" className="font-semibold">
-                Simple Monitor
+                Basic Beacon
               </Link>
               <div className="flex gap-4">
                 <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
@@ -63,7 +63,7 @@ export default function LogsPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex h-14 items-center gap-8">
             <Link href="/dashboard" className="font-semibold">
-              Simple Monitor
+              Basic Beacon
             </Link>
             <div className="flex gap-4">
               <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">

@@ -4,9 +4,9 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-8">
       <div className="text-center max-w-2xl">
-        <h1 className="text-4xl font-bold mb-4">Simple Monitor</h1>
+        <h1 className="text-4xl font-bold mb-4">Basic Beacon</h1>
         <p className="text-gray-600 mb-8">
-          Lightweight uptime monitoring for small teams and indie developers.
+          Lightweight uptime monitoring tool.
         </p>
         <div className="flex gap-4 justify-center">
           <Link

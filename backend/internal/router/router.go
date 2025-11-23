@@ -2,12 +2,17 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/omerfuterman/basic-beacon/internal/config"
 	"github.com/omerfuterman/basic-beacon/internal/handlers"
 	"github.com/omerfuterman/basic-beacon/internal/middleware"
 	"gorm.io/gorm"
 )
 
-func Setup(app *fiber.App, db *gorm.DB) {
+func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
+	// Initialize JWT secret for handlers and middleware
+	handlers.JWTSecret = cfg.JWTSecret
+	middleware.JWTSecret = cfg.JWTSecret
+
 	// Health check
 	app.Get("/health", handlers.HealthCheck)
 
@@ -22,6 +27,9 @@ func Setup(app *fiber.App, db *gorm.DB) {
 
 	// Protected routes
 	protected := v1.Group("", middleware.AuthRequired())
+
+	// Current user route
+	protected.Get("/me", handlers.GetMe(db))
 
 	// Organization routes
 	orgs := protected.Group("/organizations")
