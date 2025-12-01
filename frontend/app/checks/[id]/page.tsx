@@ -116,8 +116,30 @@ export default function CheckDetailPage() {
       <h2 className="text-lg font-semibold mb-4">Recent Results</h2>
 
       {results.length === 0 ? (
-        <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-600">No results yet</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-blue-500 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">No results yet</p>
+              <p className="text-sm text-gray-600 mt-1">
+                The worker will run this check soon. Results will appear here once the first check completes.
+              </p>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
