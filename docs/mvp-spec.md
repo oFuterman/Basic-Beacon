@@ -96,15 +96,34 @@ Light House is a lightweight uptime monitoring tool designed to track the availa
 **LogEvent** - Application logging
 - level, message, metadata, timestamp, org_id
 
-## Current Implementation Status
+## Phase Roadmap
 
-The MVP currently implements Phases 1-7 of the development roadmap:
-- Complete authentication system
-- Organization-based multi-tenancy
-- Full CRUD operations for checks
-- Background worker for automated monitoring
-- Functional frontend UI with all core pages
-- API endpoints for all primary operations
-- Docker-based development environment
+Light House is being developed across 18 phases, grouped into three milestones:
 
-See [roadmap.md](./roadmap.md) for planned enhancements and future phases.
+| Phases | Milestone | Status |
+|--------|-----------|--------|
+| 1–10 | **Job-Ready MVP** | Phase 7 Complete |
+| 11–14 | **SaaS-Ready Platform** | Planned |
+| 15–18 | **AI Enhancement Layer** | Planned |
+
+### Phase 7: Complete
+
+The current release delivers a fully functional end-to-end uptime monitoring application:
+
+- **Authentication** — JWT-based login/signup with secure password hashing
+- **Multi-Tenancy** — Organization-scoped data isolation
+- **Check Management** — Full CRUD for HTTP/HTTPS endpoint monitoring
+- **Background Worker** — Automated check execution with configurable intervals
+- **Frontend UI** — Dashboard, check details, historical results, and status badges
+- **API** — RESTful endpoints for all core operations
+- **Infrastructure** — Docker Compose orchestration for local development
+
+### Next Up: Phases 8–10
+
+| Phase | Focus | Key Deliverables |
+|-------|-------|------------------|
+| 8 | Testing | Unit tests, integration tests, E2E coverage |
+| 9 | Polish | Error handling, UX improvements, logging |
+| 10 | Deployment | Hosted demo, CI/CD pipeline, documentation |
+
+See [roadmap.md](./roadmap.md) for the complete development plan.
