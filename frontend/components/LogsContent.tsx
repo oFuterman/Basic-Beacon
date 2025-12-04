@@ -9,71 +9,150 @@ import { LogsSearchBar } from "@/components/LogsSearchBar";
 import { useLogsSearch } from "@/hooks/useLogsSearch";
 import { LogFilter, filtersToSearchRequest } from "@/lib/logs-filter";
 
-const levelColors: Record<string, string> = {
-  DEBUG: "bg-gray-100 text-gray-700",
-  INFO: "bg-blue-100 text-blue-700",
-  WARN: "bg-yellow-100 text-yellow-700",
-  ERROR: "bg-red-100 text-red-700",
+// Level colors - left border style like Datadog
+const levelBorderColors: Record<string, string> = {
+  DEBUG: "border-l-gray-400",
+  INFO: "border-l-blue-500",
+  WARN: "border-l-yellow-500",
+  ERROR: "border-l-red-500",
 };
 
-function LogEntryRow({ log }: { log: LogEntry }) {
+const levelTextColors: Record<string, string> = {
+  DEBUG: "text-gray-500",
+  INFO: "text-blue-600",
+  WARN: "text-yellow-600",
+  ERROR: "text-red-600",
+};
+
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const day = date.getDate().toString().padStart(2, "0");
+  const time = date.toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const ms = date.getMilliseconds().toString().padStart(3, "0");
+  return `${month} ${day} ${time}.${ms}`;
+}
+
+interface LogRowProps {
+  log: LogEntry;
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+function LogRow({ log, isExpanded, onToggle }: LogRowProps) {
   const level = (log.level || "INFO").toUpperCase();
+  const borderColor = levelBorderColors[level] || levelBorderColors.INFO;
+  const textColor = levelTextColors[level] || levelTextColors.INFO;
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-start gap-3">
-        <span
-          className={`px-2 py-0.5 rounded text-xs font-medium ${
-            levelColors[level] || levelColors.INFO
-          }`}
-        >
-          {level}
-        </span>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-900 font-mono">{log.message}</p>
-          <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
-            <span>{new Date(log.timestamp).toLocaleString()}</span>
-            {log.service_name && (
-              <span className="inline-flex items-center gap-1">
-                <span className="font-medium">Service:</span> {log.service_name}
-              </span>
-            )}
-            {log.environment && (
-              <span className="inline-flex items-center gap-1">
-                <span className="font-medium">Env:</span> {log.environment}
-              </span>
-            )}
-            {log.trace_id && log.trace_id.length > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <span className="font-medium">Trace:</span>
-                <code className="bg-gray-100 px-1 rounded">
-                  {log.trace_id.length > 8 ? `${log.trace_id.slice(0, 8)}...` : log.trace_id}
-                </code>
-              </span>
-            )}
-          </div>
-          {log.tags && Object.keys(log.tags).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {Object.entries(log.tags).map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
-                >
-                  {key}: {String(value)}
-                </span>
-              ))}
+    <>
+      <tr
+        onClick={onToggle}
+        className={`
+          border-l-2 ${borderColor} cursor-pointer text-xs
+          ${isExpanded ? "bg-blue-50" : "hover:bg-gray-50"}
+        `}
+      >
+        <td className="py-1.5 px-3 whitespace-nowrap text-gray-500 font-mono">
+          {formatTimestamp(log.timestamp)}
+        </td>
+        <td className="py-1.5 px-3 whitespace-nowrap">
+          <span className={`font-medium ${textColor}`}>{level}</span>
+        </td>
+        <td className="py-1.5 px-3 whitespace-nowrap text-gray-700 max-w-[150px] truncate">
+          {log.service_name || "-"}
+        </td>
+        <td className="py-1.5 px-3 text-gray-800 font-mono truncate max-w-[600px]">
+          {log.message}
+        </td>
+      </tr>
+
+      {/* Expanded details panel */}
+      {isExpanded && (
+        <tr className="bg-gray-50 border-l-2 border-l-blue-500">
+          <td colSpan={4} className="p-0">
+            <div className="p-4 space-y-4">
+              {/* Primary fields */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">Timestamp</span>
+                  <p className="font-mono text-gray-900">{new Date(log.timestamp).toISOString()}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">Level</span>
+                  <p className={`font-medium ${textColor}`}>{level}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">Service</span>
+                  <p className="text-gray-900">{log.service_name || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">Environment</span>
+                  <p className="text-gray-900">{log.environment || "-"}</p>
+                </div>
+                {log.region && (
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">Region</span>
+                    <p className="text-gray-900">{log.region}</p>
+                  </div>
+                )}
+                {log.trace_id && (
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">Trace ID</span>
+                    <p className="font-mono text-gray-900 text-xs">{log.trace_id}</p>
+                  </div>
+                )}
+                {log.span_id && (
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">Span ID</span>
+                    <p className="font-mono text-gray-900 text-xs">{log.span_id}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Message */}
+              <div>
+                <span className="text-gray-500 text-xs uppercase tracking-wide">Message</span>
+                <p className="font-mono text-gray-900 text-sm whitespace-pre-wrap break-all bg-white p-2 rounded border border-gray-200 mt-1">
+                  {log.message}
+                </p>
+              </div>
+
+              {/* Tags */}
+              {log.tags && Object.keys(log.tags).length > 0 && (
+                <div>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">Tags</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {Object.entries(log.tags).map(([key, value]) => (
+                      <span
+                        key={key}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-mono"
+                      >
+                        <span className="text-gray-500">{key}:</span>
+                        <span className="ml-1">{String(value)}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
 export function LogsContent() {
   const [filters, setFilters] = useState<LogFilter[]>([]);
   const [timeRangeHours, setTimeRangeHours] = useState(24);
+  const [expandedLogId, setExpandedLogId] = useState<number | null>(null);
   const { data: logs, total, isLoading, isLoadingMore, error, search, refetch, loadMore, hasMore } = useLogsSearch();
-  const logsContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
   // Auto-execute search when filters or time range change
@@ -95,6 +174,10 @@ export function LogsContent() {
     setTimeRangeHours(hours);
   }, []);
 
+  const toggleLogExpanded = useCallback((logId: number) => {
+    setExpandedLogId((prev) => (prev === logId ? null : logId));
+  }, []);
+
   // Infinite scroll: use IntersectionObserver to detect when we scroll near the bottom
   useEffect(() => {
     const trigger = loadMoreTriggerRef.current;
@@ -114,34 +197,38 @@ export function LogsContent() {
   }, [hasMore, isLoading, isLoadingMore, loadMore]);
 
   return (
-    <div>
-      <div className="mb-6">
-        <Link
-          href="/dashboard"
-          className="text-sm text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Dashboard
-        </Link>
-      </div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Logs</h1>
-          {total > 0 && (
-            <p className="text-sm text-gray-500 mt-1">
-              Showing {logs.length} of {total} logs
-            </p>
-          )}
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </Link>
+            <h1 className="text-xl font-semibold text-gray-900">Log Explorer</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">
+              {total.toLocaleString()} results found
+            </span>
+            <button
+              onClick={refetch}
+              disabled={isLoading}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50"
+              title="Refresh"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button
-          onClick={refetch}
-          disabled={isLoading}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm disabled:opacity-50"
-        >
-          Refresh
-        </button>
-      </div>
 
-      <div className="mb-6">
         <LogsSearchBar
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -151,6 +238,14 @@ export function LogsContent() {
         />
       </div>
 
+      {/* Results count */}
+      {logs.length > 0 && (
+        <div className="flex-shrink-0 text-xs text-gray-500 mb-2">
+          Showing {logs.length} of {total.toLocaleString()}
+        </div>
+      )}
+
+      {/* Content */}
       {isLoading ? (
         <Loading message="Searching logs..." />
       ) : error ? (
@@ -182,17 +277,34 @@ export function LogsContent() {
           </p>
         </div>
       ) : (
-        <div ref={logsContainerRef} className="space-y-2">
-          {logs.map((log) => (
-            <LogEntryRow key={log.id} log={log} />
-          ))}
+        <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+              <tr className="text-xs text-gray-600 uppercase tracking-wide">
+                <th className="py-2 px-3 font-medium w-[180px]">Date</th>
+                <th className="py-2 px-3 font-medium w-[70px]">Level</th>
+                <th className="py-2 px-3 font-medium w-[150px]">Service</th>
+                <th className="py-2 px-3 font-medium">Message</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {logs.map((log) => (
+                <LogRow
+                  key={log.id}
+                  log={log}
+                  isExpanded={expandedLogId === log.id}
+                  onToggle={() => toggleLogExpanded(log.id)}
+                />
+              ))}
+            </tbody>
+          </table>
 
           {/* Infinite scroll trigger */}
           <div ref={loadMoreTriggerRef} className="h-1" />
 
           {/* Loading more indicator */}
           {isLoadingMore && (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-3 border-t border-gray-100">
               <div className="flex items-center gap-2 text-gray-500">
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -202,15 +314,15 @@ export function LogsContent() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span className="text-sm">Loading more logs...</span>
+                <span className="text-xs">Loading more...</span>
               </div>
             </div>
           )}
 
           {/* End of results indicator */}
           {!hasMore && logs.length > 0 && (
-            <div className="text-center py-4 text-sm text-gray-500">
-              End of results ({logs.length} logs)
+            <div className="text-center py-2 text-xs text-gray-400 border-t border-gray-100">
+              End of results
             </div>
           )}
         </div>
