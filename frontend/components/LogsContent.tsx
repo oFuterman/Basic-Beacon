@@ -7,7 +7,7 @@ import { Loading } from "@/components/ui/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LogsSearchBar } from "@/components/LogsSearchBar";
 import { useLogsSearch } from "@/hooks/useLogsSearch";
-import { LogFilter, filtersToSearchRequest, createFilter, isDuplicateFilter } from "@/lib/logs-filter";
+import { LogFilter, filtersToSearchRequest, createFilter, isDuplicateFilter, SortConfig } from "@/lib/logs-filter";
 import { TimeRange } from "@/components/TimeRangePicker";
 
 // Level colors - left border style like Datadog
@@ -340,11 +340,39 @@ function formatFieldLabel(key: string): string {
   return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Sort indicator component
+function SortIndicator({ field, currentSort }: { field: string; currentSort: SortConfig }) {
+  if (currentSort.field !== field) {
+    // Show subtle indicator for sortable but not active
+    return (
+      <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    );
+  }
+
+  // Show active sort direction
+  if (currentSort.dir === "asc") {
+    return (
+      <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
 export function LogsContent() {
   const [filters, setFilters] = useState<LogFilter[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>(createDefaultTimeRange);
   const [expandedLogId, setExpandedLogId] = useState<number | null>(null);
   const [customColumns, setCustomColumns] = useState<CustomColumn[]>([]);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "timestamp", dir: "desc" });
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -356,11 +384,11 @@ export function LogsContent() {
   const { data: logs, total, isLoading, isLoadingMore, error, search, refetch, loadMore, hasMore } = useLogsSearch();
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-execute search when filters or time range change
+  // Auto-execute search when filters, time range, or sort changes
   const executeSearch = useCallback(() => {
-    const request = filtersToSearchRequest(filters, timeRange);
+    const request = filtersToSearchRequest(filters, timeRange, sortConfig);
     search(request);
-  }, [filters, timeRange, search]);
+  }, [filters, timeRange, sortConfig, search]);
 
   // Run search when filters or time range change
   useEffect(() => {
@@ -448,6 +476,18 @@ export function LogsContent() {
   // Close context menu
   const handleCloseContextMenu = useCallback(() => {
     setContextMenu(null);
+  }, []);
+
+  // Handle column header click for sorting
+  const handleSort = useCallback((field: string) => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        // Toggle direction if same field
+        return { field, dir: prev.dir === "asc" ? "desc" : "asc" };
+      }
+      // New field, default to descending (most recent first for most fields)
+      return { field, dir: "desc" };
+    });
   }, []);
 
   // Infinite scroll: use IntersectionObserver to detect when we scroll near the bottom
@@ -567,16 +607,49 @@ export function LogsContent() {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
               <tr className="text-xs text-gray-600 uppercase tracking-wide">
-                <th className="py-2 px-3 font-medium w-[180px]">Date</th>
-                <th className="py-2 px-3 font-medium w-[70px]">Level</th>
-                <th className="py-2 px-3 font-medium w-[150px]">Service</th>
+                <th className="py-2 px-3 font-medium w-[180px]">
+                  <button
+                    onClick={() => handleSort("timestamp")}
+                    className="flex items-center gap-1 hover:text-gray-900"
+                  >
+                    <span>Date</span>
+                    <SortIndicator field="timestamp" currentSort={sortConfig} />
+                  </button>
+                </th>
+                <th className="py-2 px-3 font-medium w-[70px]">
+                  <button
+                    onClick={() => handleSort("level")}
+                    className="flex items-center gap-1 hover:text-gray-900"
+                  >
+                    <span>Level</span>
+                    <SortIndicator field="level" currentSort={sortConfig} />
+                  </button>
+                </th>
+                <th className="py-2 px-3 font-medium w-[150px]">
+                  <button
+                    onClick={() => handleSort("service_name")}
+                    className="flex items-center gap-1 hover:text-gray-900"
+                  >
+                    <span>Service</span>
+                    <SortIndicator field="service_name" currentSort={sortConfig} />
+                  </button>
+                </th>
                 {/* Custom columns */}
                 {customColumns.map((col) => (
                   <th key={col.key} className="py-2 px-3 font-medium w-[150px]">
                     <div className="flex items-center gap-1">
-                      <span>{col.label}</span>
                       <button
-                        onClick={() => handleRemoveColumn(col.key)}
+                        onClick={() => handleSort(col.key)}
+                        className="flex items-center gap-1 hover:text-gray-900"
+                      >
+                        <span>{col.label}</span>
+                        <SortIndicator field={col.key} currentSort={sortConfig} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveColumn(col.key);
+                        }}
                         className="p-0.5 hover:bg-gray-200 rounded text-gray-400 hover:text-red-500"
                         title={`Remove ${col.label} column`}
                       >
@@ -587,7 +660,15 @@ export function LogsContent() {
                     </div>
                   </th>
                 ))}
-                <th className="py-2 px-3 font-medium">Message</th>
+                <th className="py-2 px-3 font-medium">
+                  <button
+                    onClick={() => handleSort("message")}
+                    className="flex items-center gap-1 hover:text-gray-900"
+                  >
+                    <span>Message</span>
+                    <SortIndicator field="message" currentSort={sortConfig} />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

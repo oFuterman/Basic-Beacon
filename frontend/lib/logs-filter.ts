@@ -8,6 +8,11 @@ export interface LogFilter {
   isTag: boolean;
 }
 
+export interface SortConfig {
+  field: string;
+  dir: "asc" | "desc";
+}
+
 export interface FieldSuggestion {
   key: string;
   label: string;
@@ -74,7 +79,11 @@ export function createFilter(field: string, value: string): LogFilter {
   };
 }
 
-export function filtersToSearchRequest(filters: LogFilter[], timeRange: TimeRange): SearchRequest {
+export function filtersToSearchRequest(
+  filters: LogFilter[],
+  timeRange: TimeRange,
+  sort: SortConfig = { field: "timestamp", dir: "desc" }
+): SearchRequest {
   const filterConditions: FilterCondition[] = [];
   const tagFilters: TagFilter[] = [];
 
@@ -103,7 +112,7 @@ export function filtersToSearchRequest(filters: LogFilter[], timeRange: TimeRang
     },
     filters: filterConditions,
     tags: tagFilters,
-    sort: [{ field: "timestamp", dir: "desc" }],
+    sort: [{ field: sort.field, dir: sort.dir }],
     limit: 100,
     offset: 0,
   };
