@@ -1,10 +1,13 @@
 package router
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/oFuterman/light-house/internal/config"
 	"github.com/oFuterman/light-house/internal/handlers"
 	"github.com/oFuterman/light-house/internal/middleware"
+	"github.com/oFuterman/light-house/internal/models"
 	"gorm.io/gorm"
 )
 
@@ -20,14 +23,18 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	// API v1
 	v1 := app.Group("/api/v1")
 
-	// Auth routes (public)
-	auth := v1.Group("/auth")
+	// Auth routes (public) with rate limiting
+	auth := v1.Group("/auth", middleware.RateLimitAuth())
 	auth.Post("/signup", handlers.Signup(db))
 	auth.Post("/login", handlers.Login(db))
 	auth.Post("/logout", handlers.Logout)
 
-	// Protected routes
-	protected := v1.Group("", middleware.AuthRequired())
+	// Invite routes (public - for accepting invites)
+	v1.Get("/invites/:token", handlers.GetInviteInfo(db))
+	v1.Post("/invites/:token/accept", middleware.RateLimitAuth(), handlers.AcceptInvite(db))
+
+	// Protected routes with fresh DB role fetch
+	protected := v1.Group("", middleware.AuthRequiredWithDB(db))
 
 	// Current user route
 	protected.Get("/me", handlers.GetMe(db))
@@ -36,7 +43,27 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	orgs := protected.Group("/organizations")
 	orgs.Get("/", handlers.ListOrganizations(db))
 	orgs.Get("/:id", handlers.GetOrganization(db))
-	orgs.Put("/:id", handlers.UpdateOrganization(db))
+	orgs.Put("/:id", middleware.RequireAdmin(), handlers.UpdateOrganization(db))
+
+	// Organization member routes
+	members := protected.Group("/members")
+	members.Get("/", handlers.ListMembers(db))
+	members.Get("/:id", handlers.GetMember(db))
+	members.Put("/:id/role", middleware.RequireAdmin(), handlers.UpdateMemberRole(db))
+	members.Delete("/:id", middleware.RequireAdmin(), handlers.RemoveMember(db))
+	members.Post("/:id/transfer-ownership", middleware.RequireOwner(), handlers.TransferOwnership(db))
+	protected.Post("/leave", handlers.LeaveOrganization(db))
+
+	// Invite routes (protected)
+	invites := protected.Group("/invites", middleware.RequireAdmin())
+	invites.Get("/", handlers.ListInvites(db))
+	invites.Post("/", handlers.CreateInvite(db))
+	invites.Delete("/:id", handlers.RevokeInvite(db))
+	invites.Post("/:id/resend", handlers.ResendInvite(db))
+
+	// Audit log routes
+	protected.Get("/audit-logs", handlers.GetAuditLogs(db))
+	protected.Get("/audit-logs/actions", handlers.GetAuditLogActions(db))
 
 	// Check routes
 	checks := protected.Group("/checks")
@@ -54,18 +81,22 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	// Alert routes (org-wide)
 	protected.Get("/alerts", handlers.GetOrgAlerts(db))
 
-	// Notification settings routes
+	// Notification settings routes (admin only)
 	protected.Get("/notification-settings", handlers.GetNotificationSettings(db))
-	protected.Put("/notification-settings", handlers.UpdateNotificationSettings(db))
+	protected.Put("/notification-settings", middleware.RequireAdmin(), handlers.UpdateNotificationSettings(db))
 
-	// API Key routes
+	// API Key routes (admin only for create/delete)
 	apiKeys := protected.Group("/api-keys")
 	apiKeys.Get("/", handlers.ListAPIKeys(db))
-	apiKeys.Post("/", handlers.CreateAPIKey(db))
-	apiKeys.Delete("/:id", handlers.DeleteAPIKey(db))
+	apiKeys.Post("/", middleware.RequireAdmin(), handlers.CreateAPIKey(db))
+	apiKeys.Delete("/:id", middleware.RequireAdmin(), handlers.DeleteAPIKey(db))
 
-	// Log ingestion (API key auth)
-	v1.Post("/logs", middleware.APIKeyAuth(db), handlers.IngestLog(db))
+	// Log ingestion (API key auth with scope check and rate limiting)
+	v1.Post("/logs",
+		middleware.RateLimitByAPIKey(1000, time.Minute), // 1000 req/min per org
+		middleware.APIKeyAuthWithScope(db, models.ScopeLogsWrite, models.ScopeAll),
+		handlers.IngestLog(db),
+	)
 	v1.Get("/logs", middleware.AuthRequired(), handlers.ListLogs(db))
 
 	// Search endpoints

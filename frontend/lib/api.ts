@@ -1,10 +1,79 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 // Types
+export type Role = "owner" | "admin" | "member";
+
 export interface User {
   id: number;
   email: string;
   org_id: number;
+  role: Role;
+  org_name?: string;
+}
+
+export interface Member {
+  id: number;
+  email: string;
+  role: Role;
+  created_at: string;
+}
+
+export type InviteStatus = "pending" | "accepted" | "expired" | "revoked";
+
+export interface Invite {
+  id: number;
+  email: string;
+  role: Role;
+  status: InviteStatus;
+  expires_at: string;
+  created_at: string;
+  invited_by: string;
+  accepted_at?: string;
+}
+
+export interface InviteInfo {
+  email: string;
+  org_name: string;
+  role: Role;
+  expires_at: string;
+}
+
+export interface AuditLog {
+  id: number;
+  created_at: string;
+  action: string;
+  resource_type?: string;
+  resource_id?: number;
+  details?: Record<string, unknown>;
+  ip_address?: string;
+  user_email?: string;
+}
+
+export interface APIKeyScopeInfo {
+  value: string;
+  label: string;
+  description: string;
+}
+
+export const API_KEY_SCOPES: APIKeyScopeInfo[] = [
+  { value: "logs:write", label: "Write Logs", description: "Ingest log data" },
+  { value: "traces:write", label: "Write Traces", description: "Ingest trace data" },
+  { value: "logs:read", label: "Read Logs", description: "Query log data" },
+  { value: "traces:read", label: "Read Traces", description: "Query trace data" },
+  { value: "checks:read", label: "Read Checks", description: "View uptime checks" },
+  { value: "checks:write", label: "Write Checks", description: "Create/update checks" },
+  { value: "alerts:read", label: "Read Alerts", description: "View alerts" },
+  { value: "*", label: "Full Access", description: "All permissions" },
+];
+
+export interface APIKey {
+  id: number;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  created_at: string;
+  last_used_at?: string;
+  created_by?: string;
 }
 
 export interface Check {
@@ -338,5 +407,108 @@ export const api = {
     request<SearchResponse<CheckResultSearchDTO>>(`/checks/${checkId}/results/search`, {
       method: "POST",
       body: JSON.stringify(searchRequest),
+    }),
+
+  // Members
+  getMembers: () =>
+    request<{ members: Member[] }>("/members").then((res) => res.members),
+
+  getMember: (id: number) =>
+    request<Member>(`/members/${id}`),
+
+  updateMemberRole: (id: number, role: Role) =>
+    request<Member>(`/members/${id}/role`, {
+      method: "PUT",
+      body: JSON.stringify({ role }),
+    }),
+
+  removeMember: (id: number) =>
+    request<{ message: string }>(`/members/${id}`, {
+      method: "DELETE",
+    }),
+
+  leaveOrganization: () =>
+    request<{ message: string }>("/leave", {
+      method: "POST",
+    }),
+
+  transferOwnership: (memberId: number) =>
+    request<{ message: string }>(`/members/${memberId}/transfer-ownership`, {
+      method: "POST",
+    }),
+
+  // Invites
+  getInvites: () =>
+    request<{ invites: Invite[] }>("/invites").then((res) => res.invites),
+
+  createInvite: (email: string, role: Role) =>
+    request<{ invite: Invite; invite_link: string }>("/invites", {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
+
+  revokeInvite: (id: number) =>
+    request<{ message: string }>(`/invites/${id}`, {
+      method: "DELETE",
+    }),
+
+  resendInvite: (id: number) =>
+    request<{ message: string; invite_link: string }>(`/invites/${id}/resend`, {
+      method: "POST",
+    }),
+
+  // Public invite endpoints (no auth required)
+  getInviteInfo: (token: string) =>
+    fetch(`${API_URL}/invites/${token}`).then(async (res) => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to get invite info");
+      }
+      return res.json() as Promise<InviteInfo>;
+    }),
+
+  acceptInvite: (token: string, password: string) =>
+    fetch(`${API_URL}/invites/${token}/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+      credentials: "include",
+    }).then(async (res) => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to accept invite");
+      }
+      return res.json() as Promise<{ token: string; user: User }>;
+    }),
+
+  // Audit Logs
+  getAuditLogs: (params?: { limit?: number; offset?: number; action?: string; window_hours?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.offset) searchParams.set("offset", String(params.offset));
+    if (params?.action) searchParams.set("action", params.action);
+    if (params?.window_hours) searchParams.set("window_hours", String(params.window_hours));
+    const query = searchParams.toString();
+    return request<{ audit_logs: AuditLog[]; total: number; limit: number; offset: number }>(
+      `/audit-logs${query ? `?${query}` : ""}`
+    );
+  },
+
+  getAuditLogActions: () =>
+    request<{ actions: string[] }>("/audit-logs/actions").then((res) => res.actions),
+
+  // API Keys
+  getAPIKeys: () =>
+    request<{ api_keys: APIKey[] }>("/api-keys").then((res) => res.api_keys),
+
+  createAPIKey: (name: string, scopes: string[]) =>
+    request<{ api_key: APIKey; key: string }>("/api-keys", {
+      method: "POST",
+      body: JSON.stringify({ name, scopes }),
+    }),
+
+  deleteAPIKey: (id: number) =>
+    request<{ message: string }>(`/api-keys/${id}`, {
+      method: "DELETE",
     }),
 };

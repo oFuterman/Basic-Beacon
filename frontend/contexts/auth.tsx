@@ -6,9 +6,10 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
-import { api, User } from "@/lib/api";
+import { api, User, Role } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +17,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, orgName: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  isOwner: boolean;
+  isAdmin: boolean;
+  canManageMembers: boolean;
+  canManageSettings: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,23 +31,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    verifyAuth();
-  }, []);
-
   // Verify auth by calling /me endpoint
   // Cookie is sent automatically with credentials: 'include'
-  const verifyAuth = async () => {
+  const verifyAuth = useCallback(async () => {
     try {
       const userData = await api.getMe();
-      setUser(userData);
+      setUser(userData as User);
     } catch {
       // Not authenticated or token expired
       setUser(null);
     } finally {
       setIsAuthLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    verifyAuth();
+  }, [verifyAuth]);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const userData = await api.getMe();
+      setUser(userData as User);
+    } catch {
+      // Ignore errors
+    }
+  }, []);
 
   const login = async (email: string, password: string) => {
     const response = await api.login(email, password);
@@ -69,8 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   };
 
+  // Role-based permission helpers
+  const isOwner = user?.role === "owner";
+  const isAdmin = user?.role === "owner" || user?.role === "admin";
+  const canManageMembers = isAdmin;
+  const canManageSettings = isAdmin;
+
   return (
-    <AuthContext.Provider value={{ user, isAuthLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthLoading,
+      login,
+      signup,
+      logout,
+      refreshUser,
+      isOwner,
+      isAdmin,
+      canManageMembers,
+      canManageSettings,
+    }}>
       {children}
     </AuthContext.Provider>
   );

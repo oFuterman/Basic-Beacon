@@ -35,6 +35,8 @@ func Migrate(db *gorm.DB) error {
         &models.APIKey{},
         &models.Alert{},
         &models.NotificationSettings{},
+        &models.Invite{},
+        &models.AuditLog{},
     )
     if err != nil {
         return err
@@ -43,7 +45,21 @@ func Migrate(db *gorm.DB) error {
     if err := createObservabilityIndexes(db); err != nil {
         log.Printf("Warning: some indexes may not have been created: %v", err)
     }
+    // Run data migrations
+    if err := migrateExistingUsers(db); err != nil {
+        log.Printf("Warning: user migration may have failed: %v", err)
+    }
     return nil
+}
+
+// migrateExistingUsers sets default role for existing users without one
+func migrateExistingUsers(db *gorm.DB) error {
+    // Set existing users without a role to 'owner' (they created the org)
+    return db.Exec(`
+        UPDATE users
+        SET role = 'owner'
+        WHERE role IS NULL OR role = ''
+    `).Error
 }
 
 func createObservabilityIndexes(db *gorm.DB) error {

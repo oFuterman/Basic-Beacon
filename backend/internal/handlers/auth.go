@@ -28,9 +28,10 @@ type AuthResponse struct {
 }
 
 type UserResponse struct {
-	ID    uint   `json:"id"`
-	Email string `json:"email"`
-	OrgID uint   `json:"org_id"`
+	ID    uint        `json:"id"`
+	Email string      `json:"email"`
+	OrgID uint        `json:"org_id"`
+	Role  models.Role `json:"role"`
 }
 
 // JWTSecret is set by the router during initialization
@@ -121,6 +122,7 @@ func Signup(db *gorm.DB) fiber.Handler {
 				Email:        req.Email,
 				PasswordHash: string(hashedPassword),
 				OrgID:        org.ID,
+				Role:         models.RoleOwner, // Founder is always owner
 			}
 			if err := tx.Create(&user).Error; err != nil {
 				return err
@@ -135,8 +137,14 @@ func Signup(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// Generate JWT token
-		token, err := generateToken(user.ID, user.OrgID)
+		// Log audit event for org creation
+		logAuditEvent(db, user.OrgID, &user.ID, models.AuditActionOrgCreated, "organization", &user.OrgID, models.JSONMap{
+			"org_name": req.OrgName,
+			"email":    req.Email,
+		}, c.IP(), c.Get("User-Agent"))
+
+		// Generate JWT token with owner role
+		token, err := generateTokenWithRole(user.ID, user.OrgID, user.Role)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",
@@ -152,6 +160,7 @@ func Signup(db *gorm.DB) fiber.Handler {
 				ID:    user.ID,
 				Email: user.Email,
 				OrgID: user.OrgID,
+				Role:  user.Role,
 			},
 		})
 	}
@@ -185,13 +194,17 @@ func Login(db *gorm.DB) fiber.Handler {
 
 		// Verify password
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+			// Log failed login attempt
+			logAuditEvent(db, user.OrgID, &user.ID, models.AuditActionLoginFailed, "user", &user.ID, models.JSONMap{
+				"email": req.Email,
+			}, c.IP(), c.Get("User-Agent"))
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "invalid email or password",
 			})
 		}
 
-		// Generate JWT token
-		token, err := generateToken(user.ID, user.OrgID)
+		// Generate JWT token with role
+		token, err := generateTokenWithRole(user.ID, user.OrgID, user.Role)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",
@@ -201,12 +214,18 @@ func Login(db *gorm.DB) fiber.Handler {
 		// Set auth cookie for browser clients
 		setAuthCookie(c, token)
 
+		// Log successful login
+		logAuditEvent(db, user.OrgID, &user.ID, models.AuditActionLogin, "user", &user.ID, models.JSONMap{
+			"email": user.Email,
+		}, c.IP(), c.Get("User-Agent"))
+
 		return c.JSON(AuthResponse{
 			Token: token,
 			User: UserResponse{
 				ID:    user.ID,
 				Email: user.Email,
 				OrgID: user.OrgID,
+				Role:  user.Role,
 			},
 		})
 	}
@@ -218,16 +237,18 @@ func GetMe(db *gorm.DB) fiber.Handler {
 		userID := c.Locals("userID").(uint)
 
 		var user models.User
-		if err := db.First(&user, userID).Error; err != nil {
+		if err := db.Preload("Organization").First(&user, userID).Error; err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "user not found",
 			})
 		}
 
-		return c.JSON(UserResponse{
-			ID:    user.ID,
-			Email: user.Email,
-			OrgID: user.OrgID,
+		return c.JSON(fiber.Map{
+			"id":       user.ID,
+			"email":    user.Email,
+			"org_id":   user.OrgID,
+			"role":     user.Role,
+			"org_name": user.Organization.Name,
 		})
 	}
 }
@@ -242,9 +263,15 @@ func Logout(c *fiber.Ctx) error {
 
 // generateToken creates a new JWT token for the user
 func generateToken(userID, orgID uint) (string, error) {
+	return generateTokenWithRole(userID, orgID, models.RoleMember)
+}
+
+// generateTokenWithRole creates a new JWT token for the user with a specific role
+func generateTokenWithRole(userID, orgID uint, role models.Role) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"org_id":  orgID,
+		"role":    string(role),
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 		"iat":     time.Now().Unix(),
 	}
