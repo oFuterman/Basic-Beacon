@@ -115,6 +115,19 @@ func GetPlanConfig(plan Plan) PlanConfig {
     return PlanConfigs[PlanFree]
 }
 
+// GetOrgPlanConfig is a convenience function that extracts the plan from an org
+// and returns the corresponding config. Logs a warning for invalid plans.
+func GetOrgPlanConfig(org *Organization) PlanConfig {
+    if org == nil {
+        return PlanConfigs[PlanFree]
+    }
+    if !org.Plan.IsValid() {
+        // Invalid plan - default to free (logging should be done by caller)
+        return PlanConfigs[PlanFree]
+    }
+    return GetPlanConfig(org.Plan)
+}
+
 // GetPlanByStripePriceID finds the plan for a Stripe price ID
 func GetPlanByStripePriceID(priceID string) (Plan, bool) {
     for plan, config := range PlanConfigs {

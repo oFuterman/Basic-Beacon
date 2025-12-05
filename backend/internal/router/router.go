@@ -128,4 +128,8 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	protected.Post("/logs/search", handlers.SearchLogs(db))
 	protected.Get("/logs/facets", handlers.GetLogFacets(db))
 	protected.Post("/traces/search", handlers.SearchTraces(db))
+
+	// Debug endpoints (development only - handler checks Environment)
+	debug := protected.Group("/debug")
+	debug.Get("/entitlements", handlers.GetDebugEntitlements(db))
 }
