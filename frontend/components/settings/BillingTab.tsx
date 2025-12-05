@@ -117,7 +117,7 @@ function PlanCard({
 
   return (
     <div
-      className={`relative rounded-lg border-2 p-4 ${
+      className={`relative rounded-lg border-2 p-4 flex flex-col ${
         isCurrent ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
       }`}
     >
@@ -130,7 +130,7 @@ function PlanCard({
         <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
         <div className="text-2xl font-bold text-gray-900">{formatPrice(plan.price_cents)}</div>
       </div>
-      <ul className="space-y-2 mb-4 text-sm text-gray-600">
+      <ul className="space-y-2 mb-4 text-sm text-gray-600 flex-grow">
         {features.map((feature, i) => (
           <li key={i} className="flex items-start">
             <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
