@@ -61,7 +61,7 @@ type APIKey struct {
 	OrgID       uint           `gorm:"not null;index" json:"org_id"`
 	Name        string         `gorm:"not null;size:255" json:"name"`
 	KeyHash     string         `gorm:"not null;uniqueIndex" json:"-"`
-	Prefix      string         `gorm:"not null;size:12" json:"prefix"` // First 8 chars for identification
+	Prefix      string         `gorm:"not null;size:12;index" json:"prefix"` // First 12 chars for identification and indexed lookup
 	Scopes      pq.StringArray `gorm:"type:text[];not null;default:'{}'" json:"scopes"`
 	LastUsedAt  *time.Time     `json:"last_used_at,omitempty"`
 	CreatedByID *uint          `json:"created_by_id,omitempty"`

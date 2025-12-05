@@ -209,23 +209,24 @@ func APIKeyAuth(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// Find API key by checking hash
-		var keys []models.APIKey
-		if err := db.Find(&keys).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed to validate API key",
+		// Validate key format and extract prefix
+		if len(apiKey) < 12 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "invalid API key format",
+			})
+		}
+		prefix := apiKey[:12]
+
+		// Find API key by prefix first (indexed lookup), then verify hash
+		var key models.APIKey
+		if err := db.Where("prefix = ?", prefix).First(&key).Error; err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "invalid API key",
 			})
 		}
 
-		var matchedKey *models.APIKey
-		for _, key := range keys {
-			if err := bcrypt.CompareHashAndPassword([]byte(key.KeyHash), []byte(apiKey)); err == nil {
-				matchedKey = &key
-				break
-			}
-		}
-
-		if matchedKey == nil {
+		// Verify the full key against the hash
+		if err := bcrypt.CompareHashAndPassword([]byte(key.KeyHash), []byte(apiKey)); err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "invalid API key",
 			})
@@ -233,12 +234,12 @@ func APIKeyAuth(db *gorm.DB) fiber.Handler {
 
 		// Update last used timestamp
 		now := time.Now()
-		db.Model(matchedKey).Update("last_used_at", now)
+		db.Model(&key).Update("last_used_at", now)
 
 		// Set context
-		c.Locals("orgID", matchedKey.OrgID)
-		c.Locals("apiKey", matchedKey)
-		c.Locals("apiKeyScopes", matchedKey.Scopes)
+		c.Locals("orgID", key.OrgID)
+		c.Locals("apiKey", &key)
+		c.Locals("apiKeyScopes", key.Scopes)
 
 		return c.Next()
 	}
@@ -254,30 +255,31 @@ func APIKeyAuthWithScope(db *gorm.DB, requiredScopes ...models.APIKeyScope) fibe
 			})
 		}
 
-		// Find API key by checking hash
-		var keys []models.APIKey
-		if err := db.Find(&keys).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed to validate API key",
+		// Validate key format and extract prefix
+		if len(apiKey) < 12 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "invalid API key format",
+			})
+		}
+		prefix := apiKey[:12]
+
+		// Find API key by prefix first (indexed lookup), then verify hash
+		var key models.APIKey
+		if err := db.Where("prefix = ?", prefix).First(&key).Error; err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "invalid API key",
 			})
 		}
 
-		var matchedKey *models.APIKey
-		for _, key := range keys {
-			if err := bcrypt.CompareHashAndPassword([]byte(key.KeyHash), []byte(apiKey)); err == nil {
-				matchedKey = &key
-				break
-			}
-		}
-
-		if matchedKey == nil {
+		// Verify the full key against the hash
+		if err := bcrypt.CompareHashAndPassword([]byte(key.KeyHash), []byte(apiKey)); err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "invalid API key",
 			})
 		}
 
 		// Check scopes
-		if len(requiredScopes) > 0 && !matchedKey.HasAnyScope(requiredScopes...) {
+		if len(requiredScopes) > 0 && !key.HasAnyScope(requiredScopes...) {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 				"error": "API key lacks required scope",
 			})
@@ -285,12 +287,12 @@ func APIKeyAuthWithScope(db *gorm.DB, requiredScopes ...models.APIKeyScope) fibe
 
 		// Update last used timestamp
 		now := time.Now()
-		db.Model(matchedKey).Update("last_used_at", now)
+		db.Model(&key).Update("last_used_at", now)
 
 		// Set context
-		c.Locals("orgID", matchedKey.OrgID)
-		c.Locals("apiKey", matchedKey)
-		c.Locals("apiKeyScopes", matchedKey.Scopes)
+		c.Locals("orgID", key.OrgID)
+		c.Locals("apiKey", &key)
+		c.Locals("apiKeyScopes", key.Scopes)
 
 		return c.Next()
 	}

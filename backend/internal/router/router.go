@@ -33,6 +33,13 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	v1.Get("/invites/:token", handlers.GetInviteInfo(db))
 	v1.Post("/invites/:token/accept", middleware.RateLimitAuth(), handlers.AcceptInvite(db))
 
+	// Log ingestion route (API key auth - must be registered before protected group)
+	v1.Post("/logs",
+		middleware.RateLimitByAPIKey(1000, time.Minute), // 1000 req/min per org
+		middleware.APIKeyAuthWithScope(db, models.ScopeLogsWrite, models.ScopeAll),
+		handlers.IngestLog(db),
+	)
+
 	// Protected routes with fresh DB role fetch
 	protected := v1.Group("", middleware.AuthRequiredWithDB(db))
 
@@ -91,13 +98,8 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	apiKeys.Post("/", middleware.RequireAdmin(), handlers.CreateAPIKey(db))
 	apiKeys.Delete("/:id", middleware.RequireAdmin(), handlers.DeleteAPIKey(db))
 
-	// Log ingestion (API key auth with scope check and rate limiting)
-	v1.Post("/logs",
-		middleware.RateLimitByAPIKey(1000, time.Minute), // 1000 req/min per org
-		middleware.APIKeyAuthWithScope(db, models.ScopeLogsWrite, models.ScopeAll),
-		handlers.IngestLog(db),
-	)
-	v1.Get("/logs", middleware.AuthRequired(), handlers.ListLogs(db))
+	// List logs route (JWT auth)
+	protected.Get("/logs", handlers.ListLogs(db))
 
 	// Search endpoints
 	protected.Post("/logs/search", handlers.SearchLogs(db))

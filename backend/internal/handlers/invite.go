@@ -362,8 +362,8 @@ func AcceptInvite(db *gorm.DB) fiber.Handler {
 			"invite_id": invite.ID,
 		}, c.IP(), c.Get("User-Agent"))
 
-		// Generate JWT token
-		jwtToken, err := generateToken(user.ID, user.OrgID)
+		// Generate JWT token with the invited role
+		jwtToken, err := generateTokenWithRole(user.ID, user.OrgID, user.Role)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",
@@ -379,6 +379,7 @@ func AcceptInvite(db *gorm.DB) fiber.Handler {
 				ID:    user.ID,
 				Email: user.Email,
 				OrgID: user.OrgID,
+				Role:  user.Role,
 			},
 		})
 	}

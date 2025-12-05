@@ -134,21 +134,36 @@ func UpdateMemberRole(db *gorm.DB) fiber.Handler {
 			}
 		}
 
-		// Ensure there's always at least one owner
-		if member.Role == models.RoleOwner && req.Role != models.RoleOwner {
-			var ownerCount int64
-			db.Model(&models.User{}).Where("org_id = ? AND role = ?", orgID, models.RoleOwner).Count(&ownerCount)
-			if ownerCount <= 1 {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "organization must have at least one owner",
-				})
-			}
-		}
-
 		oldRole := member.Role
 		member.Role = req.Role
 
-		if err := db.Save(&member).Error; err != nil {
+		// Use a transaction for owner count check + update to prevent race conditions
+		err = db.Transaction(func(tx *gorm.DB) error {
+			// If demoting an owner, ensure at least one remains
+			if oldRole == models.RoleOwner && req.Role != models.RoleOwner {
+				var ownerCount int64
+				if err := tx.Model(&models.User{}).
+					Where("org_id = ? AND role = ?", orgID, models.RoleOwner).
+					Count(&ownerCount).Error; err != nil {
+					return err
+				}
+				if ownerCount <= 1 {
+					return fiber.NewError(fiber.StatusBadRequest, "organization must have at least one owner")
+				}
+			}
+
+			if err := tx.Save(&member).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			if fiberErr, ok := err.(*fiber.Error); ok {
+				return c.Status(fiberErr.Code).JSON(fiber.Map{
+					"error": fiberErr.Message,
+				})
+			}
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to update member role",
 			})
@@ -212,19 +227,34 @@ func RemoveMember(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// Ensure there's always at least one owner
-		if member.Role == models.RoleOwner {
-			var ownerCount int64
-			db.Model(&models.User{}).Where("org_id = ? AND role = ?", orgID, models.RoleOwner).Count(&ownerCount)
-			if ownerCount <= 1 {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "cannot remove the last owner of the organization",
+		// Use a transaction for owner count check + delete to prevent race conditions
+		err = db.Transaction(func(tx *gorm.DB) error {
+			// If removing an owner, ensure at least one remains
+			if member.Role == models.RoleOwner {
+				var ownerCount int64
+				if err := tx.Model(&models.User{}).
+					Where("org_id = ? AND role = ?", orgID, models.RoleOwner).
+					Count(&ownerCount).Error; err != nil {
+					return err
+				}
+				if ownerCount <= 1 {
+					return fiber.NewError(fiber.StatusBadRequest, "cannot remove the last owner of the organization")
+				}
+			}
+
+			// Soft delete the member
+			if err := tx.Delete(&member).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			if fiberErr, ok := err.(*fiber.Error); ok {
+				return c.Status(fiberErr.Code).JSON(fiber.Map{
+					"error": fiberErr.Message,
 				})
 			}
-		}
-
-		// Soft delete the member
-		if err := db.Delete(&member).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to remove member",
 			})
@@ -249,17 +279,6 @@ func LeaveOrganization(db *gorm.DB) fiber.Handler {
 		userID := c.Locals("userID").(uint)
 		userRole := c.Locals("role").(models.Role)
 
-		// Check if user is the last owner
-		if userRole == models.RoleOwner {
-			var ownerCount int64
-			db.Model(&models.User{}).Where("org_id = ? AND role = ?", orgID, models.RoleOwner).Count(&ownerCount)
-			if ownerCount <= 1 {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "cannot leave organization as the last owner. Transfer ownership first or delete the organization.",
-				})
-			}
-		}
-
 		// Get user info for audit log
 		var user models.User
 		if err := db.First(&user, userID).Error; err != nil {
@@ -268,8 +287,34 @@ func LeaveOrganization(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// Soft delete the user
-		if err := db.Delete(&user).Error; err != nil {
+		// Use a transaction for owner count check + delete to prevent race conditions
+		err := db.Transaction(func(tx *gorm.DB) error {
+			// Check if user is the last owner
+			if userRole == models.RoleOwner {
+				var ownerCount int64
+				if err := tx.Model(&models.User{}).
+					Where("org_id = ? AND role = ?", orgID, models.RoleOwner).
+					Count(&ownerCount).Error; err != nil {
+					return err
+				}
+				if ownerCount <= 1 {
+					return fiber.NewError(fiber.StatusBadRequest, "cannot leave organization as the last owner. Transfer ownership first or delete the organization.")
+				}
+			}
+
+			// Soft delete the user
+			if err := tx.Delete(&user).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			if fiberErr, ok := err.(*fiber.Error); ok {
+				return c.Status(fiberErr.Code).JSON(fiber.Map{
+					"error": fiberErr.Message,
+				})
+			}
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to leave organization",
 			})
