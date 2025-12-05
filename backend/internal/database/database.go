@@ -37,6 +37,7 @@ func Migrate(db *gorm.DB) error {
         &models.NotificationSettings{},
         &models.Invite{},
         &models.AuditLog{},
+        &models.MonthlyUsage{},
     )
     if err != nil {
         return err
@@ -49,6 +50,9 @@ func Migrate(db *gorm.DB) error {
     if err := migrateExistingUsers(db); err != nil {
         log.Printf("Warning: user migration may have failed: %v", err)
     }
+    if err := migrateExistingOrgsToFreePlan(db); err != nil {
+        log.Printf("Warning: org plan migration may have failed: %v", err)
+    }
     return nil
 }
 
@@ -59,6 +63,16 @@ func migrateExistingUsers(db *gorm.DB) error {
         UPDATE users
         SET role = 'owner'
         WHERE role IS NULL OR role = ''
+    `).Error
+}
+
+// migrateExistingOrgsToFreePlan ensures all existing orgs have a plan set
+func migrateExistingOrgsToFreePlan(db *gorm.DB) error {
+    // Set existing orgs without a plan to 'free'
+    return db.Exec(`
+        UPDATE organizations
+        SET plan = 'free'
+        WHERE plan IS NULL OR plan = ''
     `).Error
 }
 

@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth";
 import { NotificationSettingsForm } from "@/components/NotificationSettingsForm";
 import { MembersTab } from "@/components/settings/MembersTab";
 import { InvitesTab } from "@/components/settings/InvitesTab";
 import { AuditLogTab } from "@/components/settings/AuditLogTab";
 import { APIKeysTab } from "@/components/settings/APIKeysTab";
+import { BillingTab } from "@/components/settings/BillingTab";
 
-type SettingsTab = "notifications" | "members" | "invites" | "api-keys" | "audit-log";
+type SettingsTab = "billing" | "notifications" | "members" | "invites" | "api-keys" | "audit-log";
 
 const TABS: { id: SettingsTab; label: string; adminOnly?: boolean }[] = [
+  { id: "billing", label: "Billing" },
   { id: "notifications", label: "Notifications" },
   { id: "members", label: "Members" },
   { id: "invites", label: "Invites", adminOnly: true },
@@ -21,7 +24,16 @@ const TABS: { id: SettingsTab; label: string; adminOnly?: boolean }[] = [
 
 export function SettingsContent() {
   const { user, canManageMembers, canManageSettings } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("notifications");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("billing");
+
+  // Handle tab from URL (e.g., after Stripe redirect)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && TABS.some((t) => t.id === tab)) {
+      setActiveTab(tab as SettingsTab);
+    }
+  }, [searchParams]);
 
   const visibleTabs = TABS.filter((tab) => !tab.adminOnly || canManageSettings);
 
@@ -71,6 +83,12 @@ export function SettingsContent() {
 
       {/* Tab Content */}
       <div className="bg-white rounded-lg shadow">
+        {activeTab === "billing" && (
+          <div className="p-6">
+            <BillingTab />
+          </div>
+        )}
+
         {activeTab === "notifications" && (
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Notification Settings</h2>

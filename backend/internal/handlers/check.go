@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oFuterman/light-house/internal/billing"
 	"github.com/oFuterman/light-house/internal/models"
 	"github.com/oFuterman/light-house/internal/search"
 	"gorm.io/gorm"
@@ -85,9 +86,34 @@ func CreateCheck(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// Validate interval (minimum 60 seconds)
-		if req.IntervalSeconds < 60 {
-			req.IntervalSeconds = 60
+		// Load org to get plan
+		var org models.Organization
+		if err := db.First(&org, orgID).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to load organization",
+			})
+		}
+
+		// Check plan limits - can we create another check?
+		currentCount, err := billing.GetCurrentCheckCount(db, orgID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to check limits",
+			})
+		}
+		if allowed, msg := billing.CanCreateCheck(org.Plan, currentCount); !allowed {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error":       msg,
+				"limit_type":  "checks",
+				"current":     currentCount,
+				"upgrade_url": "/settings?tab=billing",
+			})
+		}
+
+		// Validate interval against plan minimum
+		planConfig := models.GetPlanConfig(org.Plan)
+		if req.IntervalSeconds < planConfig.CheckIntervalMinSeconds {
+			req.IntervalSeconds = planConfig.CheckIntervalMinSeconds
 		}
 
 		check := models.Check{
@@ -107,6 +133,9 @@ func CreateCheck(db *gorm.DB) fiber.Handler {
 				"error": "failed to create check",
 			})
 		}
+
+		// Sync usage counts after creating
+		billing.SyncResourceCounts(db, orgID)
 
 		return c.Status(fiber.StatusCreated).JSON(check)
 	}
@@ -254,6 +283,9 @@ func DeleteCheck(db *gorm.DB) fiber.Handler {
 				"error": "check not found",
 			})
 		}
+
+		// Sync usage counts after deleting
+		billing.SyncResourceCounts(db, orgID)
 
 		return c.JSON(fiber.Map{
 			"message": "check deleted successfully",

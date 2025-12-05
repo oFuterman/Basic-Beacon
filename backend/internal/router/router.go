@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oFuterman/light-house/internal/billing"
 	"github.com/oFuterman/light-house/internal/config"
 	"github.com/oFuterman/light-house/internal/handlers"
 	"github.com/oFuterman/light-house/internal/middleware"
@@ -16,6 +17,18 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	handlers.JWTSecret = cfg.JWTSecret
 	handlers.Environment = cfg.Environment
 	middleware.JWTSecret = cfg.JWTSecret
+
+	// Initialize Stripe with configuration
+	billing.InitStripe(billing.StripeConfig{
+		SecretKey:       cfg.StripeSecretKey,
+		WebhookSecret:   cfg.StripeWebhookSecret,
+		SuccessURL:      cfg.FrontendURL + "/settings?tab=billing&checkout=success",
+		CancelURL:       cfg.FrontendURL + "/settings?tab=billing",
+		PortalReturnURL: cfg.FrontendURL + "/settings?tab=billing",
+		IndiePriceID:    cfg.StripeIndiePriceID,
+		TeamPriceID:     cfg.StripeTeamPriceID,
+		AgencyPriceID:   cfg.StripeAgencyPriceID,
+	})
 
 	// Health check
 	app.Get("/health", handlers.HealthCheck)
@@ -39,6 +52,9 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 		middleware.APIKeyAuthWithScope(db, models.ScopeLogsWrite, models.ScopeAll),
 		handlers.IngestLog(db),
 	)
+
+	// Stripe webhook (public, verified by signature - must be registered before protected group)
+	v1.Post("/billing/webhook", handlers.HandleStripeWebhook(db))
 
 	// Protected routes with fresh DB role fetch
 	protected := v1.Group("", middleware.AuthRequiredWithDB(db))
@@ -97,6 +113,13 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	apiKeys.Get("/", handlers.ListAPIKeys(db))
 	apiKeys.Post("/", middleware.RequireAdmin(), handlers.CreateAPIKey(db))
 	apiKeys.Delete("/:id", middleware.RequireAdmin(), handlers.DeleteAPIKey(db))
+
+	// Billing routes
+	billingRoutes := protected.Group("/billing")
+	billingRoutes.Get("/me", handlers.GetBilling(db))
+	billingRoutes.Get("/usage", handlers.GetUsage(db))
+	billingRoutes.Post("/checkout", middleware.RequireOwner(), handlers.CreateCheckout(db))
+	billingRoutes.Post("/portal", middleware.RequireOwner(), handlers.CreatePortal(db))
 
 	// List logs route (JWT auth)
 	protected.Get("/logs", handlers.ListLogs(db))

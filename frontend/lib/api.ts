@@ -255,6 +255,69 @@ export interface TraceSpan {
   tags?: Record<string, unknown>;
 }
 
+// Billing types
+export type Plan = "free" | "indie_pro" | "team" | "agency";
+
+export interface PlanConfig {
+  Name: string;
+  MaxChecks: number;
+  CheckIntervalMinSeconds: number;
+  LogRetentionDays: number;
+  LogVolumeBytesPerMonth: number;
+  MaxStatusPages: number;
+  MaxAPIKeys: number;
+  AuditLogRetentionDays: number;
+  AILevel1Limit: number;
+  AILevel2Limit: number;
+  AILevel3Limit: number;
+  MonthlyPriceCents: number;
+}
+
+export interface UsageSnapshot {
+  check_count: number;
+  log_volume_bytes: number;
+  status_page_count: number;
+  api_key_count: number;
+  ai_level1_calls: number;
+  ai_level2_calls: number;
+  ai_level3_calls: number;
+}
+
+export interface Violation {
+  resource: string;
+  current: number;
+  limit: number;
+  message: string;
+}
+
+export interface EntitlementResult {
+  within_limits: boolean;
+  violations?: Violation[];
+  thresholds: Record<string, number>;
+}
+
+export interface PlanInfo {
+  id: string;
+  name: string;
+  price_cents: number;
+  max_checks: number;
+  log_retention_days: number;
+  log_volume_gb: number;
+  check_interval_seconds: number;
+  is_current: boolean;
+}
+
+export interface BillingResponse {
+  plan: Plan;
+  plan_config: PlanConfig;
+  usage: UsageSnapshot;
+  entitlements: EntitlementResult;
+  subscription_status?: string;
+  current_period_end?: string;
+  cancel_at_period_end: boolean;
+  available_plans: PlanInfo[];
+}
+
 // Base fetch wrapper
 // Uses credentials: 'include' to send cookies with requests
 async function request<T>(
@@ -510,5 +573,23 @@ export const api = {
   deleteAPIKey: (id: number) =>
     request<{ message: string }>(`/api-keys/${id}`, {
       method: "DELETE",
+    }),
+
+  // Billing
+  getBilling: () =>
+    request<BillingResponse>("/billing/me"),
+
+  getUsage: () =>
+    request<UsageSnapshot>("/billing/usage"),
+
+  createCheckoutSession: (plan: Plan) =>
+    request<{ checkout_url: string }>("/billing/checkout", {
+      method: "POST",
+      body: JSON.stringify({ plan }),
+    }),
+
+  createPortalSession: () =>
+    request<{ portal_url: string }>("/billing/portal", {
+      method: "POST",
     }),
 };

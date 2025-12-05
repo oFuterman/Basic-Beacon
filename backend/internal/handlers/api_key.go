@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lib/pq"
+	"github.com/oFuterman/light-house/internal/billing"
 	"github.com/oFuterman/light-house/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -95,6 +96,30 @@ func CreateAPIKey(db *gorm.DB) fiber.Handler {
 		if req.Name == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "name is required",
+			})
+		}
+
+		// Load org to get plan
+		var org models.Organization
+		if err := db.First(&org, orgID).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to load organization",
+			})
+		}
+
+		// Check plan limits - can we create another API key?
+		currentCount, err := billing.GetCurrentAPIKeyCount(db, orgID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to check limits",
+			})
+		}
+		if allowed, msg := billing.CanCreateAPIKey(org.Plan, currentCount); !allowed {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error":       msg,
+				"limit_type":  "api_keys",
+				"current":     currentCount,
+				"upgrade_url": "/settings?tab=billing",
 			})
 		}
 
