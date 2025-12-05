@@ -28,38 +28,38 @@ export function CheckTableRow({ check, refreshTrigger = 0 }: CheckTableRowProps)
     refreshTrigger,
   });
 
-  return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-4 py-3">
-        <Link
-          href={`${basePath}/checks/${check.id}`}
-          className="font-medium text-gray-900 hover:underline"
-        >
-          {check.name}
-        </Link>
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-xs">
-        {check.url}
-      </td>
-      <td className="px-4 py-3">
-        <StatusBadge status={check.last_status} />
-      </td>
-      <td className="px-4 py-3">
-        <UptimeBadge
-          percentage={summary && summary.total_runs > 0 ? summary.uptime_percentage : null}
-          isLoading={isLoading}
-        />
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        <ClientDate date={check.last_checked_at} fallback="Never" />
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        <ClientDateOffset
-          date={check.last_checked_at}
-          offsetSeconds={check.interval_seconds}
-          fallback="Soon"
-        />
-      </td>
-    </tr>
-  );
+    return (
+        <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td className="px-4 py-3">
+                <Link
+                    href={`${basePath}/checks/${check.id}`}
+                    className="font-medium text-gray-900 hover:underline dark:text-white"
+                >
+                    {check.name}
+                </Link>
+            </td>
+            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-xs dark:text-gray-400">
+                {check.url}
+            </td>
+            <td className="px-4 py-3">
+                <StatusBadge status={check.last_status} />
+            </td>
+            <td className="px-4 py-3">
+                <UptimeBadge
+                    percentage={summary && summary.total_runs > 0 ? summary.uptime_percentage : null}
+                    isLoading={isLoading}
+                />
+            </td>
+            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                <ClientDate date={check.last_checked_at} fallback="Never" />
+            </td>
+            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                <ClientDateOffset
+                    date={check.last_checked_at}
+                    offsetSeconds={check.interval_seconds}
+                    fallback="Soon"
+                />
+            </td>
+        </tr>
+    );
 }

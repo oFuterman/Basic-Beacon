@@ -9,27 +9,27 @@ import { api, SlugSuggestion, SlugCheckResponse } from "@/lib/api";
 type Step = "account" | "slug";
 
 export function SignupForm() {
-  const router = useRouter();
-  const { signup } = useAuth();
+    const router = useRouter();
+    const { signup } = useAuth();
 
-  // Form state
-  const [step, setStep] = useState<Step>("account");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [selectedSlug, setSelectedSlug] = useState("");
-  const [customSlug, setCustomSlug] = useState("");
+    // Form state
+    const [step, setStep] = useState<Step>("account");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [orgName, setOrgName] = useState("");
+    const [selectedSlug, setSelectedSlug] = useState("");
+    const [customSlug, setCustomSlug] = useState("");
 
-  // Slug suggestions state
-  const [primarySlug, setPrimarySlug] = useState<SlugSuggestion | null>(null);
-  const [alternatives, setAlternatives] = useState<SlugSuggestion[]>([]);
-  const [slugCheckResult, setSlugCheckResult] = useState<SlugCheckResponse | null>(null);
-  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+    // Slug suggestions state
+    const [primarySlug, setPrimarySlug] = useState<SlugSuggestion | null>(null);
+    const [alternatives, setAlternatives] = useState<SlugSuggestion[]>([]);
+    const [slugCheckResult, setSlugCheckResult] = useState<SlugCheckResponse | null>(null);
+    const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
-  // UI state
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+    // UI state
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // Debounced slug check for custom input
   useEffect(() => {
@@ -141,220 +141,220 @@ export function SignupForm() {
     }
   };
 
-  // Render slug option
-  const renderSlugOption = (slug: SlugSuggestion) => {
-    const isSelected = selectedSlug === slug.slug;
+    // Render slug option
+    const renderSlugOption = (slug: SlugSuggestion) => {
+        const isSelected = selectedSlug === slug.slug;
 
-    return (
-      <button
-        key={slug.slug}
-        type="button"
-        disabled={!slug.available}
-        onClick={() => setSelectedSlug(slug.slug)}
-        className={`
-          w-full p-3 text-left border rounded-lg transition
-          ${isSelected
-            ? "border-gray-900 bg-gray-50 ring-2 ring-gray-900"
-            : slug.available
-              ? "border-gray-200 hover:border-gray-400"
-              : "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
-          }
-        `}
-      >
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-sm">
-            lighthouse.io/org/<span className="font-semibold">{slug.slug}</span>
-          </span>
-          {slug.available ? (
-            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
-              Available
-            </span>
-          ) : (
-            <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
-              Taken
-            </span>
-          )}
-        </div>
-      </button>
-    );
-  };
-
-  // Step 1: Account details
-  if (step === "account") {
-    return (
-      <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-2 text-center">Create Account</h1>
-        <p className="text-gray-600 text-center mb-6">Step 1 of 2: Account details</p>
-
-        <form onSubmit={handleAccountSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="orgName" className="block text-sm font-medium mb-1">
-              Organization Name
-            </label>
-            <input
-              id="orgName"
-              type="text"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              placeholder="Acme Corp"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              minLength={8}
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">At least 8 characters</p>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-          >
-            Continue
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link href="/login" className="text-gray-900 font-medium hover:underline">
-            Login
-          </Link>
-        </p>
-      </div>
-    );
-  }
-
-  // Step 2: Slug selection
-  return (
-    <div className="w-full max-w-md">
-      <h1 className="text-2xl font-bold mb-2 text-center">Choose Your URL</h1>
-      <p className="text-gray-600 text-center mb-6">Step 2 of 2: Pick your organization URL</p>
-
-      <form onSubmit={handleFinalSubmit} className="space-y-4">
-        {error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        {loadingSuggestions ? (
-          <div className="py-8 text-center text-gray-500">
-            Loading suggestions...
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Primary suggestion */}
-            {primarySlug && renderSlugOption(primarySlug)}
-
-            {/* Alternatives */}
-            {alternatives.length > 0 && (
-              <>
-                <p className="text-xs text-gray-500 pt-2">Alternatives</p>
-                {alternatives.slice(0, 3).map(renderSlugOption)}
-              </>
-            )}
-
-            {/* Custom slug option */}
-            <div className="pt-2">
-              <button
+        return (
+            <button
+                key={slug.slug}
                 type="button"
-                onClick={() => setSelectedSlug("custom")}
+                disabled={!slug.available}
+                onClick={() => setSelectedSlug(slug.slug)}
                 className={`
-                  w-full p-3 text-left border rounded-lg transition
-                  ${selectedSlug === "custom"
-                    ? "border-gray-900 bg-gray-50 ring-2 ring-gray-900"
-                    : "border-gray-200 hover:border-gray-400"
-                  }
+                    w-full p-3 text-left border rounded-lg transition
+                    ${isSelected
+                        ? "border-gray-900 bg-gray-50 ring-2 ring-gray-900 dark:border-gray-300 dark:bg-gray-700 dark:ring-gray-300"
+                        : slug.available
+                            ? "border-gray-200 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
+                            : "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800"
+                    }
                 `}
-              >
-                <span className="text-sm font-medium">Enter custom URL</span>
-              </button>
-
-              {selectedSlug === "custom" && (
-                <div className="mt-3">
-                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gray-900">
-                    <span className="px-3 py-2 bg-gray-100 text-gray-500 text-sm border-r">
-                      lighthouse.io/org/
+            >
+                <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
+                        lighthouse.io/org/<span className="font-semibold">{slug.slug}</span>
                     </span>
-                    <input
-                      type="text"
-                      value={customSlug}
-                      onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                      placeholder="your-slug"
-                      className="flex-1 px-3 py-2 text-sm focus:outline-none"
-                      autoFocus
-                    />
-                  </div>
-
-                  {/* Validation feedback */}
-                  {customSlug && (
-                    <div className="mt-2 text-sm">
-                      {isCheckingSlug ? (
-                        <span className="text-gray-500">Checking availability...</span>
-                      ) : slugCheckResult ? (
-                        slugCheckResult.valid && slugCheckResult.available ? (
-                          <span className="text-green-600">This URL is available</span>
-                        ) : (
-                          <span className="text-red-600">{slugCheckResult.error}</span>
-                        )
-                      ) : null}
-                    </div>
-                  )}
+                    {slug.available ? (
+                        <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded dark:bg-green-900/30 dark:text-green-400">
+                            Available
+                        </span>
+                    ) : (
+                        <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded dark:bg-red-900/30 dark:text-red-400">
+                            Taken
+                        </span>
+                    )}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+            </button>
+        );
+    };
 
-        <div className="flex gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => setStep("account")}
-            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            disabled={loading || loadingSuggestions}
-            className="flex-1 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </button>
+    // Step 1: Account details
+    if (step === "account") {
+        return (
+            <div className="w-full max-w-md">
+                <h1 className="text-2xl font-bold mb-2 text-center text-gray-900 dark:text-white">Create Account</h1>
+                <p className="text-gray-600 text-center mb-6 dark:text-gray-400">Step 1 of 2: Account details</p>
+
+                <form onSubmit={handleAccountSubmit} className="space-y-4">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm dark:bg-red-900/30 dark:text-red-400">
+                            {error}
+                        </div>
+                    )}
+
+                    <div>
+                        <label htmlFor="orgName" className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">
+                            Organization Name
+                        </label>
+                        <input
+                            id="orgName"
+                            type="text"
+                            value={orgName}
+                            onChange={(e) => setOrgName(e.target.value)}
+                            placeholder="Acme Corp"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:ring-gray-500"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:ring-gray-500"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:ring-gray-500"
+                            minLength={8}
+                            required
+                        />
+                        <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">At least 8 characters</p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                    >
+                        Continue
+                    </button>
+                </form>
+
+                <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-gray-900 font-medium hover:underline dark:text-white">
+                        Login
+                    </Link>
+                </p>
+            </div>
+        );
+    }
+
+    // Step 2: Slug selection
+    return (
+        <div className="w-full max-w-md">
+            <h1 className="text-2xl font-bold mb-2 text-center text-gray-900 dark:text-white">Choose Your URL</h1>
+            <p className="text-gray-600 text-center mb-6 dark:text-gray-400">Step 2 of 2: Pick your organization URL</p>
+
+            <form onSubmit={handleFinalSubmit} className="space-y-4">
+                {error && (
+                    <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm dark:bg-red-900/30 dark:text-red-400">
+                        {error}
+                    </div>
+                )}
+
+                {loadingSuggestions ? (
+                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                        Loading suggestions...
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {/* Primary suggestion */}
+                        {primarySlug && renderSlugOption(primarySlug)}
+
+                        {/* Alternatives */}
+                        {alternatives.length > 0 && (
+                            <>
+                                <p className="text-xs text-gray-500 pt-2 dark:text-gray-400">Alternatives</p>
+                                {alternatives.slice(0, 3).map(renderSlugOption)}
+                            </>
+                        )}
+
+                        {/* Custom slug option */}
+                        <div className="pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedSlug("custom")}
+                                className={`
+                                    w-full p-3 text-left border rounded-lg transition
+                                    ${selectedSlug === "custom"
+                                        ? "border-gray-900 bg-gray-50 ring-2 ring-gray-900 dark:border-gray-300 dark:bg-gray-700 dark:ring-gray-300"
+                                        : "border-gray-200 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
+                                    }
+                                `}
+                            >
+                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Enter custom URL</span>
+                            </button>
+
+                            {selectedSlug === "custom" && (
+                                <div className="mt-3">
+                                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gray-900 dark:border-gray-600 dark:focus-within:ring-gray-500">
+                                        <span className="px-3 py-2 bg-gray-100 text-gray-500 text-sm border-r dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                                            lighthouse.io/org/
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={customSlug}
+                                            onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                            placeholder="your-slug"
+                                            className="flex-1 px-3 py-2 text-sm focus:outline-none dark:bg-gray-800 dark:text-white"
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    {/* Validation feedback */}
+                                    {customSlug && (
+                                        <div className="mt-2 text-sm">
+                                            {isCheckingSlug ? (
+                                                <span className="text-gray-500 dark:text-gray-400">Checking availability...</span>
+                                            ) : slugCheckResult ? (
+                                                slugCheckResult.valid && slugCheckResult.available ? (
+                                                    <span className="text-green-600 dark:text-green-400">This URL is available</span>
+                                                ) : (
+                                                    <span className="text-red-600 dark:text-red-400">{slugCheckResult.error}</span>
+                                                )
+                                            ) : null}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => setStep("account")}
+                        className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        Back
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading || loadingSuggestions}
+                        className="flex-1 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                    >
+                        {loading ? "Creating..." : "Create Account"}
+                    </button>
+                </div>
+            </form>
         </div>
-      </form>
-    </div>
-  );
+    );
 }

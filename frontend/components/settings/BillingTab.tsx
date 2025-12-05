@@ -63,105 +63,105 @@ function formatPrice(cents: number): string {
 }
 
 function UsageMeter({
-  label,
-  current,
-  limit,
-  formatValue = (v) => v.toString(),
+    label,
+    current,
+    limit,
+    formatValue = (v) => v.toString(),
 }: {
-  label: string;
-  current: number;
-  limit: number;
-  formatValue?: (v: number) => string;
+    label: string;
+    current: number;
+    limit: number;
+    formatValue?: (v: number) => string;
 }) {
-  const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
-  const isUnlimited = limit < 0;
-  const isWarning = percentage >= 80 && percentage < 100;
-  const isOver = percentage >= 100;
+    const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
+    const isUnlimited = limit < 0;
+    const isWarning = percentage >= 80 && percentage < 100;
+    const isOver = percentage >= 100;
 
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">{label}</span>
-        <span className={`font-medium ${isOver ? "text-red-600" : isWarning ? "text-yellow-600" : "text-gray-900"}`}>
-          {formatValue(current)} / {isUnlimited ? "Unlimited" : formatValue(limit)}
-        </span>
-      </div>
-      {!isUnlimited && (
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              isOver ? "bg-red-500" : isWarning ? "bg-yellow-500" : "bg-blue-500"
-            }`}
-            style={{ width: `${percentage}%` }}
-          />
+    return (
+        <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">{label}</span>
+                <span className={`font-medium ${isOver ? "text-red-600 dark:text-red-400" : isWarning ? "text-yellow-600 dark:text-yellow-400" : "text-gray-900 dark:text-white"}`}>
+                    {formatValue(current)} / {isUnlimited ? "Unlimited" : formatValue(limit)}
+                </span>
+            </div>
+            {!isUnlimited && (
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
+                    <div
+                        className={`h-full transition-all ${
+                            isOver ? "bg-red-500" : isWarning ? "bg-yellow-500" : "bg-blue-500"
+                        }`}
+                        style={{ width: `${percentage}%` }}
+                    />
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
 function PlanCard({
-  plan,
-  billing,
-  onUpgrade,
-  isLoading,
+    plan,
+    billing,
+    onUpgrade,
+    isLoading,
 }: {
-  plan: PlanInfo;
-  billing: BillingResponse;
-  onUpgrade: (plan: Plan) => void;
-  isLoading: boolean;
+    plan: PlanInfo;
+    billing: BillingResponse;
+    onUpgrade: (plan: Plan) => void;
+    isLoading: boolean;
 }) {
-  const isCurrent = plan.is_current;
-  const isDowngrade = plan.price_cents < billing.plan_config.MonthlyPriceCents;
-  const features = PLAN_FEATURES[plan.id as Plan] || [];
+    const isCurrent = plan.is_current;
+    const isDowngrade = plan.price_cents < billing.plan_config.MonthlyPriceCents;
+    const features = PLAN_FEATURES[plan.id as Plan] || [];
 
-  return (
-    <div
-      className={`relative rounded-lg border-2 p-4 flex flex-col ${
-        isCurrent ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
-      }`}
-    >
-      {isCurrent && (
-        <div className="absolute -top-3 left-4 bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
-          Current Plan
-        </div>
-      )}
-      <div className="mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-        <div className="text-2xl font-bold text-gray-900">{formatPrice(plan.price_cents)}</div>
-      </div>
-      <ul className="space-y-2 mb-4 text-sm text-gray-600 flex-grow">
-        {features.map((feature, i) => (
-          <li key={i} className="flex items-start">
-            <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-            {feature}
-          </li>
-        ))}
-      </ul>
-      {!isCurrent && plan.price_cents > 0 && (
-        <button
-          onClick={() => onUpgrade(plan.id as Plan)}
-          disabled={isLoading || isDowngrade}
-          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-            isDowngrade
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
+    return (
+        <div
+            className={`relative rounded-lg border-2 p-4 flex flex-col ${
+                isCurrent ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+            }`}
         >
-          {isLoading ? "Loading..." : isDowngrade ? "Manage in Portal" : "Upgrade"}
-        </button>
-      )}
-      {!isCurrent && plan.price_cents === 0 && (
-        <div className="text-center text-sm text-gray-500">Downgrade via Billing Portal</div>
-      )}
-    </div>
-  );
+            {isCurrent && (
+                <div className="absolute -top-3 left-4 bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
+                    Current Plan
+                </div>
+            )}
+            <div className="mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{plan.name}</h3>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(plan.price_cents)}</div>
+            </div>
+            <ul className="space-y-2 mb-4 text-sm text-gray-600 flex-grow dark:text-gray-400">
+                {features.map((feature, i) => (
+                    <li key={i} className="flex items-start">
+                        <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                        {feature}
+                    </li>
+                ))}
+            </ul>
+            {!isCurrent && plan.price_cents > 0 && (
+                <button
+                    onClick={() => onUpgrade(plan.id as Plan)}
+                    disabled={isLoading || isDowngrade}
+                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                        isDowngrade
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                >
+                    {isLoading ? "Loading..." : isDowngrade ? "Manage in Portal" : "Upgrade"}
+                </button>
+            )}
+            {!isCurrent && plan.price_cents === 0 && (
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400">Downgrade via Billing Portal</div>
+            )}
+        </div>
+    );
 }
 
 export function BillingTab() {
@@ -209,142 +209,142 @@ export function BillingTab() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-        {error}
-      </div>
-    );
-  }
-
-  if (!billing) return null;
-
-  const config = billing.plan_config;
-
-  return (
-    <div className="space-y-8">
-      {/* Current Plan Status */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Current Plan: {config.Name}</h2>
-            {billing.subscription_status && (
-              <div className="flex items-center mt-1">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                    billing.subscription_status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : billing.subscription_status === "past_due"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {billing.subscription_status === "active" && "Active"}
-                  {billing.subscription_status === "past_due" && "Payment Due"}
-                  {billing.subscription_status === "canceled" && "Canceled"}
-                </span>
-                {billing.cancel_at_period_end && billing.current_period_end && (
-                  <span className="ml-2 text-sm text-gray-500">
-                    Cancels on {new Date(billing.current_period_end).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-          {isOwner && billing.plan !== "free" && (
-            <button
-              onClick={handleManageBilling}
-              disabled={upgradeLoading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Manage Billing
-            </button>
-          )}
-        </div>
-
-        {/* Usage Meters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <UsageMeter
-            label="Uptime Checks"
-            current={billing.usage.check_count}
-            limit={config.MaxChecks}
-          />
-          <UsageMeter
-            label="Log Volume (this month)"
-            current={billing.usage.log_volume_bytes}
-            limit={config.LogVolumeBytesPerMonth}
-            formatValue={formatBytes}
-          />
-          <UsageMeter
-            label="API Keys"
-            current={billing.usage.api_key_count}
-            limit={config.MaxAPIKeys}
-          />
-          <UsageMeter
-            label="Status Pages"
-            current={billing.usage.status_page_count}
-            limit={config.MaxStatusPages}
-          />
-        </div>
-
-        {/* Warnings */}
-        {billing.entitlements.violations && billing.entitlements.violations.length > 0 && (
-          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex">
-              <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div>
-                <h4 className="font-medium text-yellow-800">Usage Limits Exceeded</h4>
-                <ul className="mt-1 text-sm text-yellow-700">
-                  {billing.entitlements.violations.map((v, i) => (
-                    <li key={i}>{v.message}</li>
-                  ))}
-                </ul>
-              </div>
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
-          </div>
-        )}
-      </div>
+        );
+    }
 
-      {/* Available Plans */}
-      {isOwner && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Plans</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {billing.available_plans.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                billing={billing}
-                onUpgrade={handleUpgrade}
-                isLoading={upgradeLoading}
-              />
-            ))}
-          </div>
-          <p className="mt-4 text-sm text-gray-500">
-            All plans include unlimited team members. No per-seat charges.
-          </p>
-        </div>
-      )}
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
+                {error}
+            </div>
+        );
+    }
 
-      {!isOwner && (
-        <div className="bg-gray-50 rounded-lg p-4 text-gray-600 text-sm">
-          Only the organization owner can manage billing and subscriptions.
+    if (!billing) return null;
+
+    const config = billing.plan_config;
+
+    return (
+        <div className="space-y-8">
+            {/* Current Plan Status */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Current Plan: {config.Name}</h2>
+                        {billing.subscription_status && (
+                            <div className="flex items-center mt-1">
+                                <span
+                                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                        billing.subscription_status === "active"
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                            : billing.subscription_status === "past_due"
+                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                    }`}
+                                >
+                                    {billing.subscription_status === "active" && "Active"}
+                                    {billing.subscription_status === "past_due" && "Payment Due"}
+                                    {billing.subscription_status === "canceled" && "Canceled"}
+                                </span>
+                                {billing.cancel_at_period_end && billing.current_period_end && (
+                                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                                        Cancels on {new Date(billing.current_period_end).toLocaleDateString()}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    {isOwner && billing.plan !== "free" && (
+                        <button
+                            onClick={handleManageBilling}
+                            disabled={upgradeLoading}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                        >
+                            Manage Billing
+                        </button>
+                    )}
+                </div>
+
+                {/* Usage Meters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <UsageMeter
+                        label="Uptime Checks"
+                        current={billing.usage.check_count}
+                        limit={config.MaxChecks}
+                    />
+                    <UsageMeter
+                        label="Log Volume (this month)"
+                        current={billing.usage.log_volume_bytes}
+                        limit={config.LogVolumeBytesPerMonth}
+                        formatValue={formatBytes}
+                    />
+                    <UsageMeter
+                        label="API Keys"
+                        current={billing.usage.api_key_count}
+                        limit={config.MaxAPIKeys}
+                    />
+                    <UsageMeter
+                        label="Status Pages"
+                        current={billing.usage.status_page_count}
+                        limit={config.MaxStatusPages}
+                    />
+                </div>
+
+                {/* Warnings */}
+                {billing.entitlements.violations && billing.entitlements.violations.length > 0 && (
+                    <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 dark:bg-yellow-900/20 dark:border-yellow-800">
+                        <div className="flex">
+                            <svg className="w-5 h-5 text-yellow-600 mr-2 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    fillRule="evenodd"
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                            <div>
+                                <h4 className="font-medium text-yellow-800 dark:text-yellow-300">Usage Limits Exceeded</h4>
+                                <ul className="mt-1 text-sm text-yellow-700 dark:text-yellow-400">
+                                    {billing.entitlements.violations.map((v, i) => (
+                                        <li key={i}>{v.message}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Available Plans */}
+            {isOwner && (
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-white">Available Plans</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {billing.available_plans.map((plan) => (
+                            <PlanCard
+                                key={plan.id}
+                                plan={plan}
+                                billing={billing}
+                                onUpgrade={handleUpgrade}
+                                isLoading={upgradeLoading}
+                            />
+                        ))}
+                    </div>
+                    <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                        All plans include unlimited team members. No per-seat charges.
+                    </p>
+                </div>
+            )}
+
+            {!isOwner && (
+                <div className="bg-gray-50 rounded-lg p-4 text-gray-600 text-sm dark:bg-gray-700 dark:text-gray-400">
+                    Only the organization owner can manage billing and subscriptions.
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }

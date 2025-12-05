@@ -12,17 +12,17 @@ import { TimeRange } from "@/components/TimeRangePicker";
 
 // Level colors - left border style like Datadog
 const levelBorderColors: Record<string, string> = {
-  DEBUG: "border-l-gray-400",
-  INFO: "border-l-blue-500",
-  WARN: "border-l-yellow-500",
-  ERROR: "border-l-red-500",
+    DEBUG: "border-l-gray-400",
+    INFO: "border-l-blue-500",
+    WARN: "border-l-yellow-500",
+    ERROR: "border-l-red-500",
 };
 
 const levelTextColors: Record<string, string> = {
-  DEBUG: "text-gray-500",
-  INFO: "text-blue-600",
-  WARN: "text-yellow-600",
-  ERROR: "text-red-600",
+    DEBUG: "text-gray-500 dark:text-gray-400",
+    INFO: "text-blue-600 dark:text-blue-400",
+    WARN: "text-yellow-600 dark:text-yellow-400",
+    ERROR: "text-red-600 dark:text-red-400",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -76,40 +76,40 @@ function FieldContextMenu({ x, y, fieldKey, fieldValue, onSearch, onAddToTable, 
   const adjustedX = Math.min(x, window.innerWidth - 200);
   const adjustedY = Math.min(y, window.innerHeight - 100);
 
-  return (
-    <div
-      ref={menuRef}
-      className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[160px]"
-      style={{ left: adjustedX, top: adjustedY }}
-    >
-      <button
-        onClick={() => {
-          onSearch();
-          onClose();
-        }}
-        className="w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        {isTimestamp ? "Search ±1 hour" : `Search ${fieldKey}`}
-      </button>
-      {!isTimestamp && canAddToTable && (
-        <button
-          onClick={() => {
-            onAddToTable();
-            onClose();
-          }}
-          className="w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+    return (
+        <div
+            ref={menuRef}
+            className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[160px] dark:bg-gray-800 dark:border-gray-700"
+            style={{ left: adjustedX, top: adjustedY }}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add to table
-        </button>
-      )}
-    </div>
-  );
+            <button
+                onClick={() => {
+                    onSearch();
+                    onClose();
+                }}
+                className="w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {isTimestamp ? "Search ±1 hour" : `Search ${fieldKey}`}
+            </button>
+            {!isTimestamp && canAddToTable && (
+                <button
+                    onClick={() => {
+                        onAddToTable();
+                        onClose();
+                    }}
+                    className="w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add to table
+                </button>
+            )}
+        </div>
+    );
 }
 
 interface LogRowProps {
@@ -170,7 +170,7 @@ function ClickableValue({
         e.stopPropagation();
         onFieldClick(e, fieldKey, value, isTimestamp);
       }}
-      className={`${className} hover:bg-blue-100 hover:text-blue-700 px-1 -mx-1 rounded transition-colors cursor-pointer text-left`}
+      className={`${className} hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/50 dark:hover:text-blue-300 px-1 -mx-1 rounded transition-colors cursor-pointer text-left`}
       title={isTimestamp ? "Click for options" : `Click for options on ${fieldKey}:${value}`}
     >
       {value}
@@ -189,51 +189,51 @@ function LogRow({ log, isExpanded, onToggle, onFieldClick, customColumns }: LogR
         onClick={onToggle}
         className={`
           border-l-2 ${borderColor} cursor-pointer text-xs
-          ${isExpanded ? "bg-blue-50" : "hover:bg-gray-50"}
+          ${isExpanded ? "bg-blue-50 dark:bg-blue-900/30" : "hover:bg-gray-50 dark:hover:bg-gray-700/50"}
         `}
       >
-        <td className="py-1.5 px-3 whitespace-nowrap text-gray-500 font-mono">
+        <td className="py-1.5 px-3 whitespace-nowrap text-gray-500 font-mono dark:text-gray-400">
           {formatTimestamp(log.timestamp)}
         </td>
         <td className="py-1.5 px-3 whitespace-nowrap">
           <span className={`font-medium ${textColor}`}>{level}</span>
         </td>
-        <td className="py-1.5 px-3 whitespace-nowrap text-gray-700 max-w-[150px] truncate">
+        <td className="py-1.5 px-3 whitespace-nowrap text-gray-700 max-w-[150px] truncate dark:text-gray-300">
           {log.service_name || "-"}
         </td>
-        <td className="py-1.5 px-3 whitespace-nowrap text-gray-600 max-w-[120px] truncate">
+        <td className="py-1.5 px-3 whitespace-nowrap text-gray-600 max-w-[120px] truncate dark:text-gray-400">
           {log.environment || "-"}
         </td>
         {/* Custom columns */}
         {customColumns.map((col) => (
-          <td key={col.key} className="py-1.5 px-3 whitespace-nowrap text-gray-700 max-w-[150px] truncate">
+          <td key={col.key} className="py-1.5 px-3 whitespace-nowrap text-gray-700 max-w-[150px] truncate dark:text-gray-300">
             {getFieldValue(log, col.key)}
           </td>
         ))}
-        <td className="py-1.5 px-3 text-gray-800 font-mono truncate max-w-[600px]">
+        <td className="py-1.5 px-3 text-gray-800 font-mono truncate max-w-[600px] dark:text-gray-200">
           {log.message}
         </td>
       </tr>
 
       {/* Expanded details panel */}
       {isExpanded && (
-        <tr className="bg-gray-50 border-l-2 border-l-blue-500">
+        <tr className="bg-gray-50 border-l-2 border-l-blue-500 dark:bg-gray-800">
           <td colSpan={5 + customColumns.length} className="p-0">
             <div className="p-4 space-y-4" onClick={(e) => e.stopPropagation()}>
               {/* Primary fields */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Timestamp:</span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Timestamp:</span>
                   <ClickableValue
                     fieldKey="timestamp"
                     value={new Date(log.timestamp).toISOString()}
                     onFieldClick={(e) => onFieldClick(e, "timestamp", log.timestamp, true)}
-                    className="font-mono text-gray-900"
+                    className="font-mono text-gray-900 dark:text-white"
                     isTimestamp
                   />
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Level:</span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Level:</span>
                   <ClickableValue
                     fieldKey="level"
                     value={level}
@@ -242,53 +242,53 @@ function LogRow({ log, isExpanded, onToggle, onFieldClick, customColumns }: LogR
                   />
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Service:</span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Service:</span>
                   <ClickableValue
                     fieldKey="service_name"
                     value={log.service_name}
                     onFieldClick={onFieldClick}
-                    className="text-gray-900"
+                    className="text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Environment:</span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Environment:</span>
                   <ClickableValue
                     fieldKey="environment"
                     value={log.environment}
                     onFieldClick={onFieldClick}
-                    className="text-gray-900"
+                    className="text-gray-900 dark:text-white"
                   />
                 </div>
                 {log.region && (
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Region:</span>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Region:</span>
                     <ClickableValue
                       fieldKey="region"
                       value={log.region}
                       onFieldClick={onFieldClick}
-                      className="text-gray-900"
+                      className="text-gray-900 dark:text-white"
                     />
                   </div>
                 )}
                 {log.trace_id && (
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Trace ID:</span>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Trace ID:</span>
                     <ClickableValue
                       fieldKey="trace_id"
                       value={log.trace_id}
                       onFieldClick={onFieldClick}
-                      className="font-mono text-gray-900 text-xs"
+                      className="font-mono text-gray-900 text-xs dark:text-white"
                     />
                   </div>
                 )}
                 {log.span_id && (
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Span ID:</span>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Span ID:</span>
                     <ClickableValue
                       fieldKey="span_id"
                       value={log.span_id}
                       onFieldClick={onFieldClick}
-                      className="font-mono text-gray-900 text-xs"
+                      className="font-mono text-gray-900 text-xs dark:text-white"
                     />
                   </div>
                 )}
@@ -296,8 +296,8 @@ function LogRow({ log, isExpanded, onToggle, onFieldClick, customColumns }: LogR
 
               {/* Message */}
               <div>
-                <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Message:</span>
-                <p className="font-mono text-gray-900 text-sm whitespace-pre-wrap break-all bg-white p-2 rounded border border-gray-200 mt-1">
+                <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Message:</span>
+                <p className="font-mono text-gray-900 text-sm whitespace-pre-wrap break-all bg-white p-2 rounded border border-gray-200 mt-1 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700">
                   {log.message}
                 </p>
               </div>
@@ -305,7 +305,7 @@ function LogRow({ log, isExpanded, onToggle, onFieldClick, customColumns }: LogR
               {/* Tags */}
               {log.tags && Object.keys(log.tags).length > 0 && (
                 <div>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1">Tags:</span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide block mb-1 dark:text-gray-400">Tags:</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {Object.entries(log.tags).map(([key, value]) => (
                       <button
@@ -314,10 +314,10 @@ function LogRow({ log, isExpanded, onToggle, onFieldClick, customColumns }: LogR
                           e.stopPropagation();
                           onFieldClick(e, key, String(value));
                         }}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-mono hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer"
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-mono hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
                         title={`Click for options on ${key}:${value}`}
                       >
-                        <span className="text-gray-500">{key}:</span>
+                        <span className="text-gray-500 dark:text-gray-400">{key}:</span>
                         <span className="ml-1">{String(value)}</span>
                       </button>
                     ))}
@@ -543,22 +543,22 @@ export function LogsContent() {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Log Explorer</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Log Explorer</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {total.toLocaleString()} results found
             </span>
             <button
               onClick={refetch}
               disabled={isLoading}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800"
               title="Refresh"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -579,7 +579,7 @@ export function LogsContent() {
 
       {/* Results count */}
       {logs.length > 0 && (
-        <div className="flex-shrink-0 text-xs text-gray-500 mb-2">
+        <div className="flex-shrink-0 text-xs text-gray-500 mb-2 dark:text-gray-400">
           Showing {logs.length} of {total.toLocaleString()}
         </div>
       )}
@@ -594,8 +594,8 @@ export function LogsContent() {
           onRetry={refetch}
         />
       ) : logs.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 mb-4">
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 mb-4 dark:bg-gray-700">
             <svg
               className="w-7 h-7 text-gray-400"
               fill="none"
@@ -610,20 +610,20 @@ export function LogsContent() {
               />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">No logs found</h2>
-          <p className="text-gray-600 text-sm max-w-sm mx-auto">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2 dark:text-white">No logs found</h2>
+          <p className="text-gray-600 text-sm max-w-sm mx-auto dark:text-gray-400">
             No logs match your search criteria. Try adjusting your filters or time range.
           </p>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200">
+        <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
-              <tr className="text-xs text-gray-600 uppercase tracking-wide">
+            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 dark:bg-gray-900 dark:border-gray-700">
+              <tr className="text-xs text-gray-600 uppercase tracking-wide dark:text-gray-400">
                 <th className="py-2 px-3 font-medium w-[180px]">
                   <button
                     onClick={() => handleSort("timestamp")}
-                    className="flex items-center gap-1 hover:text-gray-900"
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                   >
                     <span>Date</span>
                     <SortIndicator field="timestamp" currentSort={sortConfig} />
@@ -632,7 +632,7 @@ export function LogsContent() {
                 <th className="py-2 px-3 font-medium w-[70px]">
                   <button
                     onClick={() => handleSort("level")}
-                    className="flex items-center gap-1 hover:text-gray-900"
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                   >
                     <span>Level</span>
                     <SortIndicator field="level" currentSort={sortConfig} />
@@ -641,7 +641,7 @@ export function LogsContent() {
                 <th className="py-2 px-3 font-medium w-[150px]">
                   <button
                     onClick={() => handleSort("service_name")}
-                    className="flex items-center gap-1 hover:text-gray-900"
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                   >
                     <span>Service</span>
                     <SortIndicator field="service_name" currentSort={sortConfig} />
@@ -650,7 +650,7 @@ export function LogsContent() {
                 <th className="py-2 px-3 font-medium w-[120px]">
                   <button
                     onClick={() => handleSort("environment")}
-                    className="flex items-center gap-1 hover:text-gray-900"
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                   >
                     <span>Env</span>
                     <SortIndicator field="environment" currentSort={sortConfig} />
@@ -662,7 +662,7 @@ export function LogsContent() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort(col.key)}
-                        className="flex items-center gap-1 hover:text-gray-900"
+                        className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                       >
                         <span>{col.label}</span>
                         <SortIndicator field={col.key} currentSort={sortConfig} />
@@ -672,7 +672,7 @@ export function LogsContent() {
                           e.stopPropagation();
                           handleRemoveColumn(col.key);
                         }}
-                        className="p-0.5 hover:bg-gray-200 rounded text-gray-400 hover:text-red-500"
+                        className="p-0.5 hover:bg-gray-200 rounded text-gray-400 hover:text-red-500 dark:hover:bg-gray-700"
                         title={`Remove ${col.label} column`}
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -685,7 +685,7 @@ export function LogsContent() {
                 <th className="py-2 px-3 font-medium">
                   <button
                     onClick={() => handleSort("message")}
-                    className="flex items-center gap-1 hover:text-gray-900"
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
                   >
                     <span>Message</span>
                     <SortIndicator field="message" currentSort={sortConfig} />
@@ -693,7 +693,7 @@ export function LogsContent() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {logs.map((log) => (
                 <LogRow
                   key={log.id}
@@ -712,8 +712,8 @@ export function LogsContent() {
 
           {/* Loading more indicator */}
           {isLoadingMore && (
-            <div className="flex justify-center py-3 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex justify-center py-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path
@@ -729,7 +729,7 @@ export function LogsContent() {
 
           {/* End of results indicator */}
           {!hasMore && logs.length > 0 && (
-            <div className="text-center py-2 text-xs text-gray-400 border-t border-gray-100">
+            <div className="text-center py-2 text-xs text-gray-400 border-t border-gray-100 dark:border-gray-700 dark:text-gray-500">
               End of results
             </div>
           )}

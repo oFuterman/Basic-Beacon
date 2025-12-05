@@ -397,7 +397,7 @@ export function LogsSearchBar({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 dark:bg-gray-800 dark:border-gray-700">
       {/* Time Range - visible on small screens only */}
       <div className="lg:hidden">
         <div className="flex items-center justify-between">
@@ -407,7 +407,7 @@ export function LogsSearchBar({
             disabled={isLoading}
           />
           {facetsLoading && (
-            <span className="text-xs text-gray-400">Loading filters...</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Loading filters...</span>
           )}
         </div>
       </div>
@@ -418,12 +418,12 @@ export function LogsSearchBar({
         <div ref={containerRef} className="relative flex-1 lg:flex-[3]">
         <div
           className={`
-            flex items-center border rounded-md transition-all
-            ${isDropdownOpen ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-300"}
+            flex items-center border rounded-md transition-all bg-white dark:bg-gray-800
+            ${isDropdownOpen ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-300 dark:border-gray-600"}
           `}
         >
           {/* Search Icon */}
-          <div className="pl-3 text-gray-400">
+          <div className="pl-3 text-gray-400 dark:text-gray-500">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -431,9 +431,9 @@ export function LogsSearchBar({
 
           {/* Selected Key Tag (shown when in value mode) */}
           {inputMode === "value" && selectedKeyLabel && (
-            <div className="ml-2 flex items-center bg-blue-100 text-blue-800 rounded px-2 py-1 text-sm">
+            <div className="ml-2 flex items-center bg-blue-100 text-blue-800 rounded px-2 py-1 text-sm dark:bg-blue-900/50 dark:text-blue-300">
               <span className="font-medium">{selectedKeyLabel}</span>
-              <span className="mx-1 text-blue-600">=</span>
+              <span className="mx-1 text-blue-600 dark:text-blue-400">=</span>
             </div>
           )}
 
@@ -451,7 +451,7 @@ export function LogsSearchBar({
                 : "Filter by level, service, environment, tags..."
             }
             disabled={isLoading}
-            className="flex-1 px-3 py-2 text-sm bg-transparent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-2 text-sm bg-transparent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
           />
 
           {/* Loading indicator */}
@@ -471,9 +471,9 @@ export function LogsSearchBar({
 
         {/* Dropdown */}
         {isDropdownOpen && dropdownItems.length > 0 && (
-          <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
             {inputMode === "value" && (
-              <div className="px-3 py-2 text-xs text-gray-500 border-b border-gray-100">
+              <div className="px-3 py-2 text-xs text-gray-500 border-b border-gray-100 dark:text-gray-400 dark:border-gray-700">
                 Select a value for <span className="font-medium">{selectedKeyLabel}</span>
               </div>
             )}
@@ -484,12 +484,12 @@ export function LogsSearchBar({
                 onClick={() => handleDropdownItemClick(item)}
                 className={`
                   w-full px-4 py-2 text-left text-sm flex items-center justify-between
-                  ${index === highlightedIndex ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"}
+                  ${index === highlightedIndex ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"}
                 `}
               >
                 <div className="flex items-center gap-2">
                   {item.type === "recent" && (
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -499,7 +499,7 @@ export function LogsSearchBar({
                     </svg>
                   )}
                   {item.type === "key" && (
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -530,7 +530,7 @@ export function LogsSearchBar({
                   )}
                   <span className={item.type === "key" || item.type === "custom" ? "font-medium" : ""}>{item.label}</span>
                 </div>
-                {"description" in item && item.description && <span className="text-gray-400 text-xs">{item.description}</span>}
+                {"description" in item && item.description && <span className="text-gray-400 text-xs dark:text-gray-500">{item.description}</span>}
               </button>
             ))}
           </div>
@@ -538,10 +538,10 @@ export function LogsSearchBar({
 
         {/* Show hint when in value mode with no matching dropdown items */}
         {isDropdownOpen && inputMode === "value" && dropdownItems.length === 0 && inputValue && (
-          <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3">
-            <p className="text-sm text-gray-500">
-              Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Enter</kbd> to filter by{" "}
-              <span className="font-medium text-blue-600">
+          <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 dark:bg-gray-800 dark:border-gray-700">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono dark:bg-gray-700 dark:text-gray-300">Enter</kbd> to filter by{" "}
+              <span className="font-medium text-blue-600 dark:text-blue-400">
                 {selectedKeyLabel}={inputValue}
               </span>
             </p>
@@ -561,15 +561,15 @@ export function LogsSearchBar({
 
       {/* Filter Chips */}
       {filters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-500 mr-1">Active filters:</span>
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-xs text-gray-500 mr-1 dark:text-gray-400">Active filters:</span>
           {filters.map((filter) => (
             <FilterChip key={filter.id} filter={filter} onRemove={() => removeFilter(filter.id)} />
           ))}
           <button
             onClick={clearAllFilters}
             disabled={isLoading}
-            className="text-xs text-gray-500 hover:text-red-600 disabled:opacity-50 ml-2"
+            className="text-xs text-gray-500 hover:text-red-600 disabled:opacity-50 ml-2 dark:text-gray-400 dark:hover:text-red-400"
           >
             Clear all
           </button>

@@ -236,18 +236,18 @@ export function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerPr
       {/* Input */}
       <div
         className={`
-          flex items-center border rounded-md transition-all bg-white
+          flex items-center border rounded-md transition-all bg-white dark:bg-gray-800
           ${isOpen
             ? isInputValid
               ? "border-blue-500 ring-2 ring-blue-500"
               : "border-red-500 ring-2 ring-red-500"
-            : "border-gray-300"
+            : "border-gray-300 dark:border-gray-600"
           }
-          ${disabled ? "opacity-50 cursor-not-allowed bg-gray-50" : "hover:border-gray-400"}
+          ${disabled ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-900" : "hover:border-gray-400 dark:hover:border-gray-500"}
         `}
       >
         {/* Clock icon */}
-        <div className="pl-3 text-gray-400 flex-shrink-0">
+        <div className="pl-3 text-gray-400 flex-shrink-0 dark:text-gray-500">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -262,7 +262,7 @@ export function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerPr
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          className="flex-1 px-3 py-2 text-sm bg-transparent focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-700 min-w-0"
+          className="flex-1 px-3 py-2 text-sm bg-transparent focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-700 dark:placeholder:text-gray-300 min-w-0 text-gray-900 dark:text-white"
         />
 
         {/* Dropdown chevron */}
@@ -283,7 +283,7 @@ export function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerPr
             }
           }}
           disabled={disabled}
-          className="pr-3 text-gray-400 flex-shrink-0 hover:text-gray-600"
+          className="pr-3 text-gray-400 flex-shrink-0 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         >
           <svg
             className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -298,10 +298,10 @@ export function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerPr
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-30 mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-full min-w-[200px]">
+        <div className="absolute z-30 mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-full min-w-[200px] dark:bg-gray-800 dark:border-gray-700">
           {/* Invalid input warning */}
           {!isInputValid && (
-            <div className="px-3 py-2 text-xs text-red-600 bg-red-50 border-b border-red-100">
+            <div className="px-3 py-2 text-xs text-red-600 bg-red-50 border-b border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
               Invalid format. Use: MM/DD HH:MM:SS - MM/DD HH:MM:SS
             </div>
           )}
@@ -315,23 +315,23 @@ export function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerPr
                 className={`
                   w-full px-4 py-2 text-sm text-left flex items-center justify-between
                   ${index === highlightedIndex
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
                     : matchingPreset?.value === preset.value
-                      ? "bg-gray-50 text-gray-900"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white"
+                      : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
                   }
                 `}
               >
                 <span>{preset.label}</span>
                 {matchingPreset?.value === preset.value && (
-                  <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </button>
             ))}
           </div>
-          <div className="px-3 py-2 border-t border-gray-100 text-xs text-gray-500">
+          <div className="px-3 py-2 border-t border-gray-100 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
             Type to edit or select a preset
           </div>
         </div>

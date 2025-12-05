@@ -3,65 +3,88 @@
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth";
+import { useTheme } from "@/contexts/theme";
+
+function ThemeToggle() {
+    const { theme, toggleTheme } = useTheme();
+    return (
+        <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+            {theme === "dark" ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            )}
+        </button>
+    );
+}
 
 export function DashboardNav() {
-  const pathname = usePathname();
-  const params = useParams();
-  const { user, logout } = useAuth();
+    const pathname = usePathname();
+    const params = useParams();
+    const { user, logout } = useAuth();
 
-  // F4 mitigation: prefer params, fallback to auth context
-  const slug = (params?.slug as string) || user?.org_slug || "";
-  const basePath = slug ? `/org/${slug}` : "";
+    // F4 mitigation: prefer params, fallback to auth context
+    const slug = (params?.slug as string) || user?.org_slug || "";
+    const basePath = slug ? `/org/${slug}` : "";
 
-  const navItems = [
-    { href: `${basePath}/dashboard`, label: "Checks" },
-    { href: `${basePath}/logs`, label: "Logs" },
-  ];
+    const navItems = [
+        { href: `${basePath}/dashboard`, label: "Checks" },
+        { href: `${basePath}/logs`, label: "Logs" },
+    ];
 
-  // Check if current path matches nav item (handle both old and new paths)
-  const isActive = (href: string) => {
-    if (pathname === href) return true;
-    // Also match paths without org prefix for backwards compatibility
-    const pathWithoutOrg = pathname.replace(/^\/org\/[^/]+/, "");
-    const hrefWithoutOrg = href.replace(/^\/org\/[^/]+/, "");
-    return pathWithoutOrg === hrefWithoutOrg;
-  };
+    // Check if current path matches nav item (handle both old and new paths)
+    const isActive = (href: string) => {
+        if (pathname === href) return true;
+        // Also match paths without org prefix for backwards compatibility
+        const pathWithoutOrg = pathname.replace(/^\/org\/[^/]+/, "");
+        const hrefWithoutOrg = href.replace(/^\/org\/[^/]+/, "");
+        return pathWithoutOrg === hrefWithoutOrg;
+    };
 
-  return (
-    <nav className="border-b border-gray-200 bg-white">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between h-14">
-          <div className="flex items-center gap-8">
-            <Link href={`${basePath}/dashboard`} className="font-semibold">
-              Light House
-            </Link>
-            <div className="flex gap-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`text-sm ${
-                    isActive(item.href)
-                      ? "text-gray-900 font-medium"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+    return (
+        <nav className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="flex justify-between h-14">
+                    <div className="flex items-center gap-8">
+                        <Link href={`${basePath}/dashboard`} className="font-semibold text-gray-900 dark:text-white">
+                            Light House
+                        </Link>
+                        <div className="flex gap-4">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`text-sm ${
+                                        isActive(item.href)
+                                            ? "text-gray-900 font-medium dark:text-white"
+                                            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</span>
+                        <ThemeToggle />
+                        <button
+                            onClick={logout}
+                            className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.email}</span>
-            <button
-              onClick={logout}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
+        </nav>
+    );
 }
